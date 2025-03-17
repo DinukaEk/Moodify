@@ -160,6 +160,8 @@ def detect_emotion(image):
             'probability': probability,
             'position': (x, y, w, h)
         })
+
+        print("Results:", results)
     
     # Determine the dominant emotion
     if results:
