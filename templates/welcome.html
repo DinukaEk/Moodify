@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmotionTunes - Your Emotion-Based Music Recommender</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="welcome-page">
+    <div class="welcome-container">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="EmotionTunes Logo" class="logo">
+        </div>
+        
+        <div class="welcome-content">
+            <h1>Welcome to EmotionTunes</h1>
+            <p class="tagline">Discover music that matches your mood</p>
+            
+            <div class="feature-cards">
+                <div class="feature-card">
+                    <i class="fas fa-smile-beam feature-icon"></i>
+                    <h3>Emotion Detection</h3>
+                    <p>Our AI analyzes your facial expression in real-time</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-music feature-icon"></i>
+                    <h3>Music Recommendations</h3>
+                    <p>Get song suggestions based on your current mood</p>
+                </div>
+                
+                <div class="feature-card">
+                    <i class="fas fa-play-circle feature-icon"></i>
+                    <h3>Instant Playback</h3>
+                    <p>Listen to your mood-matched music right away</p>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('detect') }}" class="start-button">
+                Get Started <i class="fas fa-arrow-right"></i>
+            </a>
+            
+            <div class="how-it-works">
+                <h2>How It Works</h2>
+                <ol class="steps">
+                    <li>Allow camera access when prompted</li>
+                    <li>Our AI detects your facial expression</li>
+                    <li>We analyze your emotional state</li>
+                    <li>Receive personalized music recommendations</li>
+                </ol>
+            </div>
+        </div>
+        
+        <footer class="welcome-footer">
+            <p>© 2025 EmotionTunes</p>
+        </footer>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/welcome.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmotionTunes - Emotion Detection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body class="detect-page">
+    <header>
+        <div class="navbar">
+            <div class="logo">
+                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="EmotionTunes Logo">
+                <h1>EmotionTunes</h1>
+            </div>
+            <a href="{{ url_for('welcome') }}" class="home-link">Home</a>
+        </div>
+    </header>
+
+    <main class="detect-container">
+        <div class="detection-area">
+            <h2><i class="fas fa-camera"></i> Emotion Detection</h2>
+            <p class="instructions">Position your face in the camera view and make an expression</p>
+            
+            <div class="camera-container">
+                <div class="video-container">
+                    <video id="webcam" autoplay playsinline></video>
+                    <canvas id="canvas" style="display: none;"></canvas>
+                </div>
+                
+                <div class="emotion-result" id="emotion-result">
+                    <div class="emotion-placeholder">
+                        <i class="fas fa-spinner fa-pulse"></i>
+                        <p>Ready to detect your emotion</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="camera-controls">
+                <button id="capture-btn" class="action-button">
+                    <i class="fas fa-camera"></i> Capture Emotion
+                </button>
+                <button id="retake-btn" class="action-button" style="display: none;">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+                <button id="continue-btn" class="action-button continue-button" style="display: none;">
+                    <i class="fas fa-music"></i> Get Music Recommendations
+                </button>
+            </div>
+        </div>
+        
+        <div class="detection-info">
+            <div class="info-card">
+                <h3><i class="fas fa-info-circle"></i> How It Works</h3>
+                <ol>
+                    <li>Position your face clearly in the camera view</li>
+                    <li>Make an expression that reflects your current mood</li>
+                    <li>Click the "Capture Emotion" button</li>
+                    <li>Our AI will analyze your facial expression</li>
+                    <li>Proceed to get music recommendations based on your emotion</li>
+                </ol>
+                <p class="tip"><i class="fas fa-lightbulb"></i> Tip: Make sure you're in a well-lit area for better results!</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 EmotionTunes</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/detect.js') }}"></script>
+</body>
+</html>
