@@ -161,7 +161,7 @@ def detect_emotion(image):
             'position': (x, y, w, h)
         })
 
-        print("Results:", results)
+        results = [item for sublist in results for item in sublist]
     
     # Determine the dominant emotion
     if results:
@@ -220,6 +220,9 @@ def process_frame(frame_data):
     
     if not dominant_emotion:
         return {"error": "No face detected"}
+    
+    if isinstance(dominant_emotion, list) and dominant_emotion:
+        dominant_emotion = dominant_emotion[0]  # Take the first item if it's a list
     
     # Return the dominant emotion and song recommendations
     return {
