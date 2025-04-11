@@ -1,12 +1,58 @@
-from flask import Flask, render_template, Response, redirect, url_for, jsonify
+from flask import Flask, render_template, Response, redirect, url_for, jsonify, request, session, flash
 import cv2
 import numpy as np
 import tensorflow as tf
 import base64
 from PIL import Image
 import io
+import os
+from werkzeug.security import generate_password_hash, check_password_hash
+import sqlite3
+import uuid
+from functools import wraps
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Secret key for sessions
+
+# Database setup
+def get_db_connection():
+    conn = sqlite3.connect('moodify.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+def init_db():
+    conn = get_db_connection()
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS users (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        username TEXT UNIQUE NOT NULL,
+        email TEXT UNIQUE NOT NULL,
+        password TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+    conn.execute('''
+    CREATE TABLE IF NOT EXISTS user_history (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        emotion TEXT NOT NULL,
+        song_id TEXT,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    conn.commit()
+    conn.close()
+
+# Login required decorator
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # Load the emotion detection model
 model = None
@@ -225,34 +271,153 @@ def process_frame(frame_data):
         "recommendations": emotion_songs.get(dominant_emotion, [])
     }
 
-# Routes
+# Save user emotion and recommendation history
+def save_user_history(user_id, emotion, song_id=None):
+    conn = get_db_connection()
+    history_id = str(uuid.uuid4())
+    conn.execute('INSERT INTO user_history (id, user_id, emotion, song_id) VALUES (?, ?, ?, ?)',
+                 (history_id, user_id, emotion, song_id))
+    conn.commit()
+    conn.close()
+
+# Authentication Routes
 @app.route('/')
+def index():
+    if 'user_id' in session:
+        return redirect(url_for('welcome'))
+    return redirect(url_for('login'))
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        
+        conn = get_db_connection()
+        user = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', 
+                          (username, username)).fetchone()
+        conn.close()
+        
+        if user and check_password_hash(user['password'], password):
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['name'] = user['name']
+            return redirect(url_for('welcome'))
+        
+        flash('Invalid username or password')
+    
+    return render_template('login.html')
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        name = request.form['name']
+        username = request.form['username']
+        email = request.form['email']
+        password = request.form['password']
+        confirm_password = request.form['confirm_password']
+        
+        if password != confirm_password:
+            flash('Passwords do not match')
+            return render_template('signup.html')
+            
+        # Check if username or email already exists
+        conn = get_db_connection()
+        existing_user = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', 
+                                (username, email)).fetchone()
+        
+        if existing_user:
+            conn.close()
+            flash('Username or email already exists')
+            return render_template('signup.html')
+        
+        # Create new user
+        user_id = str(uuid.uuid4())
+        hashed_password = generate_password_hash(password)
+        
+        conn.execute('INSERT INTO users (id, name, username, email, password) VALUES (?, ?, ?, ?, ?)',
+                   (user_id, name, username, email, hashed_password))
+        conn.commit()
+        conn.close()
+        
+        # Log the user in
+        session['user_id'] = user_id
+        session['username'] = username
+        session['name'] = name
+        
+        return redirect(url_for('welcome'))
+        
+    return render_template('signup.html')
+
+@app.route('/logout')
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+# Application Routes
+@app.route('/welcome')
+@login_required
 def welcome():
-    return render_template('welcome.html')
+    return render_template('welcome.html', username=session.get('name', 'User'))
 
 @app.route('/detect')
+@login_required
 def detect():
     return render_template('detect.html')
 
 @app.route('/recommendations')
+@login_required
 def recommendations():
     return render_template('recommendations.html')
 
 @app.route('/video_feed')
+@login_required
 def video_feed():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/process_emotion', methods=['POST'])
+@login_required
 def process_emotion():
-    from flask import request
     data = request.json
     frame_data = data.get('image')
     
     result = process_frame(frame_data)
+    
+    # Save the emotion detection result to user history
+    if 'user_id' in session and 'dominant_emotion' in result:
+        save_user_history(session['user_id'], result['dominant_emotion'])
+    
     return jsonify(result)
 
+@app.route('/save_song_selection', methods=['POST'])
+@login_required
+def save_song_selection():
+    data = request.json
+    emotion = data.get('emotion')
+    song_id = data.get('song_id')
+    
+    if 'user_id' in session:
+        save_user_history(session['user_id'], emotion, song_id)
+        return jsonify({"success": True})
+    
+    return jsonify({"success": False, "error": "User not logged in"})
+
+@app.route('/user_history')
+@login_required
+def user_history():
+    conn = get_db_connection()
+    history = conn.execute('''
+        SELECT emotion, song_id, timestamp 
+        FROM user_history 
+        WHERE user_id = ? 
+        ORDER BY timestamp DESC
+    ''', (session['user_id'],)).fetchall()
+    conn.close()
+    
+    return render_template('history.html', history=history)
+
 if __name__ == '__main__':
+    init_db()  # Initialize the database
     load_model()
-    import os
-    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get("PORT", 10000)))
+    app.run(debug=True, host='0.0.0.0', port=5000)

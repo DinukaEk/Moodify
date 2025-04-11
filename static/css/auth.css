@@ -1,0 +1,132 @@
+/* Authentication Pages Styling */
+:root {
+    --auth-primary: #f86f04;
+    --auth-text: #fff;
+    --auth-background: rgba(255, 255, 255, 0.2);
+    --auth-box-bg: rgba(255, 255, 255, 0.2);
+    --auth-input-bg: rgba(255, 255, 255, 0.1);
+    --auth-border: rgba(255, 255, 255, 0.3);
+}
+
+.auth-page {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../images/auth-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    color: var(--auth-text);
+}
+
+.auth-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.auth-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 5% 10%;
+}
+
+.auth-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.logo-text {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.logo {
+    width: 150px;
+    height: 150px;
+    margin-top: 20px;
+}
+
+.tagline {
+    font-size: 1.5rem;
+    line-height: 1.8;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.auth-box {
+    background: var(--auth-box-bg);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 40px;
+    width: 80%;
+    max-width: 500px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--auth-border);
+}
+
+.auth-title {
+    font-size: 2rem;
+    margin: 0;
+    margin-bottom: 5px;
+}
+
+.auth-subtitle {
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form .form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.auth-form .form-group.half {
+    flex: 1;
+}
+
+.auth-form input {
+    width: 100%;
+    padding: 15px;
+    background: var(--auth-input-bg);
+    border: 1px solid var(--auth-border);
+    border-radius: 5px;
+    color: white;
+    font-size: 1rem;
+}
+
+.auth-form input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.auth-form input:focus {
+    outline: none;
+    border-color: var(--auth-primary);
+}
+
+.form-check {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}

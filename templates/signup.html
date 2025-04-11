@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify - Sign Up</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-right signup-left">
+            <div class="auth-box signup-box">
+                <p class="auth-redirect-top">Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-error">
+                            {{ messages[0] }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" action="{{ url_for('signup') }}" class="auth-form">
+                    <div class="form-row">
+                        <div class="form-group half">
+                            <input type="text" name="name" id="name" required 
+                                   placeholder="Name">
+                        </div>
+                        
+                        <div class="form-group half">
+                            <input type="text" name="username" id="username" required 
+                                   placeholder="User Name">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="email" name="email" id="email" required 
+                               placeholder="Email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" name="password" id="password" required 
+                               placeholder="Password">
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" name="confirm_password" id="confirm_password" required 
+                               placeholder="Re Enter Password">
+                    </div>
+                    
+                    <div class="form-submit">
+                        <button type="submit" class="auth-button">Sign Up</button>
+                    </div>
+                </form>
+                
+                <div class="auth-separator">
+                    <span>Or Sign up with</span>
+                </div>
+                
+                <div class="social-login">
+                    <a href="#" class="google-btn">
+                        <img src="{{ url_for('static', filename='images/google-icon.png') }}" alt="Google icon">
+                        Sign up with Google
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-left signup-right">
+            <div class="logo-container">
+                <h1 class="logo-text">Moodify</h1>
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moodify Logo" class="logo">
+            </div>
+            <p class="tagline">
+                "Welcome to Moodify!<br>
+                Let your emotions guide the<br>
+                music as we tailor the perfect<br>
+                playtred just for you"
+            </p>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>

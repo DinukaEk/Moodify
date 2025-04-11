@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify - Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+</head>
+<body class="auth-page">
+    <div class="auth-container">
+        <div class="auth-left">
+            <div class="logo-container">
+                <h1 class="logo-text">Moodify</h1>
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Moodify Logo" class="logo">
+            </div>
+            <p class="tagline">
+                "Welcome to Moodify!<br>
+                Let your emotions guide the<br>
+                music as we tailor the perfect<br>
+                playtred just for you"
+            </p>
+        </div>
+        
+        <div class="auth-right">
+            <div class="auth-box">
+                <h2 class="auth-title">Welcome Back!</h2>
+                <p class="auth-subtitle">Login to continue to Moodify</p>
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-error">
+                            {{ messages[0] }}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <form method="POST" action="{{ url_for('login') }}" class="auth-form">
+                    <div class="form-group">
+                        <input type="text" name="username" id="username" required 
+                               placeholder="User Name / Email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="password" name="password" id="password" required 
+                               placeholder="Password">
+                    </div>
+                    
+                    <div class="form-check">
+                        <label class="checkbox-container">
+                            <input type="checkbox" name="remember" id="remember">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-password">Forgot Password?</a>
+                    </div>
+                    
+                    <div class="form-submit">
+                        <button type="submit" class="auth-button">Login</button>
+                    </div>
+                </form>
+                
+                <div class="auth-separator">
+                    <span>Or Login with</span>
+                </div>
+                
+                <div class="social-login">
+                    <a href="#" class="google-btn">
+                        <img src="{{ url_for('static', filename='images/google-icon.png') }}" alt="Google icon">
+                        Sign up with Google
+                    </a>
+                </div>
+                
+                <div class="auth-redirect">
+                    <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+</body>
+</html>
