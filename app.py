@@ -13,9 +13,10 @@ import uuid
 from functools import wraps
 from urllib.parse import urlparse
 import time
+import traceback
 
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))  # Secret key for sessions
+app.secret_key = os.environ.get('SECRET_KEY', '62c572339f2ac6fd45aea9720bdb654c')  # Secret key for sessions
 app.config['SESSION_COOKIE_SECURE'] = True
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
@@ -23,58 +24,75 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
 # Database setup with PostgreSQL
 def get_db_connection():
     """Connect to the PostgreSQL database server"""
-    # Get database URL from environment variable (Render provides this)
-    database_url = os.environ.get('DATABASE_URL', 'postgresql://moodify_db_fpmg_user:ISoOmpqy5SWWQ0esQRJF7sifOkLUFeyb@dpg-cvtca995pdvs739ld57g-a.oregon-postgres.render.com/moodify_db_fpmg')
-    
-    # Parse the URL to get connection parameters
-    parsed_url = urlparse(database_url)
-    
-    # Connect to the PostgreSQL server
-    conn = psycopg2.connect(
-        host=parsed_url.hostname,
-        database=parsed_url.path[1:],
-        user=parsed_url.username,
-        password=parsed_url.password,
-        port=parsed_url.port
-    )
-    
-    # Create cursor with dictionary-like results
-    conn.cursor_factory = psycopg2.extras.DictCursor
-    
-    return conn
+    try:
+        # Get database URL from environment variable (Render provides this)
+        database_url = os.environ.get('DATABASE_URL', 'postgresql://moodify_db_fpmg_user:ISoOmpqy5SWWQ0esQRJF7sifOkLUFeyb@dpg-cvtca995pdvs739ld57g-a.oregon-postgres.render.com/moodify_db_fpmg')
+        
+        # Parse the URL to get connection parameters
+        parsed_url = urlparse(database_url)
+        
+        # Connect to the PostgreSQL server
+        conn = psycopg2.connect(
+            host=parsed_url.hostname,
+            database=parsed_url.path[1:],
+            user=parsed_url.username,
+            password=parsed_url.password,
+            port=parsed_url.port
+        )
+        
+        # Create cursor with dictionary-like results
+        conn.cursor_factory = psycopg2.extras.DictCursor
+        
+        return conn
+    except Exception as e:
+        print(f"Database connection error: {str(e)}")
+        raise
 
 def init_db():
     """Initialize the database tables if they don't exist"""
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    # Create users table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS users (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-    ''')
-    
-    # Create user_history table
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS user_history (
-        id TEXT PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        emotion TEXT NOT NULL,
-        song_id TEXT,
-        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (user_id) REFERENCES users (id)
-    )
-    ''')
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Create users table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            username TEXT UNIQUE NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        ''')
+        
+        # Create user_history table
+        cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_history (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            emotion TEXT NOT NULL,
+            song_id TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+        ''')
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        print("Database tables created successfully")
+        return True
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+        return False
+
+# Initialize database when the app starts
+try:
+    init_db()
+    print("Database initialized on startup")
+except Exception as e:
+    print(f"Failed to initialize database on startup: {str(e)}")
 
 # Login required decorator
 def login_required(f):
@@ -304,16 +322,21 @@ def process_frame(frame_data):
 
 # Save user emotion and recommendation history
 def save_user_history(user_id, emotion, song_id=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    history_id = str(uuid.uuid4())
-    
-    cursor.execute('INSERT INTO user_history (id, user_id, emotion, song_id) VALUES (%s, %s, %s, %s)',
-                 (history_id, user_id, emotion, song_id))
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        history_id = str(uuid.uuid4())
+        
+        cursor.execute('INSERT INTO user_history (id, user_id, emotion, song_id) VALUES (%s, %s, %s, %s)',
+                    (history_id, user_id, emotion, song_id))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving user history: {str(e)}")
+        return False
 
 # Authentication Routes
 @app.route('/')
@@ -328,31 +351,35 @@ def login():
         return redirect(url_for('welcome'))
         
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        # Check if the user exists (by username or email)
-        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
-                      (username, username))
-        user = cursor.fetchone()
-        
-        cursor.close()
-        conn.close()
-        
-        if user and check_password_hash(user['password'], password):
-            # Set session variables
-            session.clear()
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            session['name'] = user['name']
+        try:
+            username = request.form['username']
+            password = request.form['password']
             
-            # Redirect to welcome page
-            return redirect(url_for('welcome'))
-        
-        flash('Invalid username or password')
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Check if the user exists (by username or email)
+            cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
+                        (username, username))
+            user = cursor.fetchone()
+            
+            cursor.close()
+            conn.close()
+            
+            if user and check_password_hash(user['password'], password):
+                # Set session variables
+                session.clear()
+                session['user_id'] = user['id']
+                session['username'] = user['username']
+                session['name'] = user['name']
+                
+                # Redirect to welcome page
+                return redirect(url_for('welcome'))
+            
+            flash('Invalid username or password')
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            flash('An error occurred during login. Please try again later.')
     
     return render_template('login.html')
 
@@ -362,40 +389,40 @@ def signup():
         return redirect(url_for('welcome'))
         
     if request.method == 'POST':
-        name = request.form['name']
-        username = request.form['username']
-        email = request.form['email']
-        password = request.form['password']
-        confirm_password = request.form['confirm_password']
-        
-        # Validate input
-        if not all([name, username, email, password, confirm_password]):
-            flash('All fields are required')
-            return render_template('signup.html')
-            
-        if password != confirm_password:
-            flash('Passwords do not match')
-            return render_template('signup.html')
-        
-        # Check if username or email already exists
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        
-        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
-                      (username, email))
-        existing_user = cursor.fetchone()
-        
-        if existing_user:
-            cursor.close()
-            conn.close()
-            flash('Username or email already exists')
-            return render_template('signup.html')
-        
-        # Create new user
-        user_id = str(uuid.uuid4())
-        hashed_password = generate_password_hash(password)
-        
         try:
+            name = request.form['name']
+            username = request.form['username']
+            email = request.form['email']
+            password = request.form['password']
+            confirm_password = request.form['confirm_password']
+            
+            # Validate input
+            if not all([name, username, email, password, confirm_password]):
+                flash('All fields are required')
+                return render_template('signup.html')
+                
+            if password != confirm_password:
+                flash('Passwords do not match')
+                return render_template('signup.html')
+            
+            # Check if username or email already exists
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
+                          (username, email))
+            existing_user = cursor.fetchone()
+            
+            if existing_user:
+                cursor.close()
+                conn.close()
+                flash('Username or email already exists')
+                return render_template('signup.html')
+            
+            # Create new user
+            user_id = str(uuid.uuid4())
+            hashed_password = generate_password_hash(password)
+            
             cursor.execute('INSERT INTO users (id, name, username, email, password) VALUES (%s, %s, %s, %s, %s)',
                        (user_id, name, username, email, hashed_password))
             conn.commit()
@@ -410,12 +437,12 @@ def signup():
             conn.close()
             
             return redirect(url_for('welcome'))
-            
+                
         except Exception as e:
-            conn.rollback()
-            cursor.close()
-            conn.close()
-            flash(f'An error occurred during registration: {str(e)}')
+            error_details = traceback.format_exc()
+            print(f"Signup error: {str(e)}")
+            print(f"Error details: {error_details}")
+            flash('An error occurred during registration. Please try again later.')
             return render_template('signup.html')
     
     return render_template('signup.html')
@@ -477,22 +504,27 @@ def save_song_selection():
 @app.route('/user_history')
 @login_required
 def user_history():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        SELECT emotion, song_id, timestamp 
-        FROM user_history 
-        WHERE user_id = %s 
-        ORDER BY timestamp DESC
-    ''', (session['user_id'],))
-    
-    history = cursor.fetchall()
-    
-    cursor.close()
-    conn.close()
-    
-    return render_template('history.html', history=history)
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT emotion, song_id, timestamp 
+            FROM user_history 
+            WHERE user_id = %s 
+            ORDER BY timestamp DESC
+        ''', (session['user_id'],))
+        
+        history = cursor.fetchall()
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template('history.html', history=history)
+    except Exception as e:
+        print(f"Error retrieving user history: {str(e)}")
+        flash('An error occurred while retrieving your history.')
+        return redirect(url_for('welcome'))
 
 if __name__ == '__main__':
     # Initialize the database on startup
