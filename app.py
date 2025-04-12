@@ -7,22 +7,49 @@ from PIL import Image
 import io
 import os
 from werkzeug.security import generate_password_hash, check_password_hash
-import sqlite3
+import psycopg2
+import psycopg2.extras
 import uuid
 from functools import wraps
+from urllib.parse import urlparse
+import time
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # Secret key for sessions
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))  # Secret key for sessions
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
 
-# Database setup
+# Database setup with PostgreSQL
 def get_db_connection():
-    conn = sqlite3.connect('moodify.db')
-    conn.row_factory = sqlite3.Row
+    """Connect to the PostgreSQL database server"""
+    # Get database URL from environment variable (Render provides this)
+    database_url = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/moodify_db')
+    
+    # Parse the URL to get connection parameters
+    parsed_url = urlparse(database_url)
+    
+    # Connect to the PostgreSQL server
+    conn = psycopg2.connect(
+        host=parsed_url.hostname,
+        database=parsed_url.path[1:],
+        user=parsed_url.username,
+        password=parsed_url.password,
+        port=parsed_url.port
+    )
+    
+    # Create cursor with dictionary-like results
+    conn.cursor_factory = psycopg2.extras.DictCursor
+    
     return conn
 
 def init_db():
+    """Initialize the database tables if they don't exist"""
     conn = get_db_connection()
-    conn.execute('''
+    cursor = conn.cursor()
+    
+    # Create users table
+    cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         name TEXT NOT NULL,
@@ -32,7 +59,9 @@ def init_db():
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
-    conn.execute('''
+    
+    # Create user_history table
+    cursor.execute('''
     CREATE TABLE IF NOT EXISTS user_history (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
@@ -42,7 +71,9 @@ def init_db():
         FOREIGN KEY (user_id) REFERENCES users (id)
     )
     ''')
+    
     conn.commit()
+    cursor.close()
     conn.close()
 
 # Login required decorator
@@ -274,10 +305,14 @@ def process_frame(frame_data):
 # Save user emotion and recommendation history
 def save_user_history(user_id, emotion, song_id=None):
     conn = get_db_connection()
+    cursor = conn.cursor()
     history_id = str(uuid.uuid4())
-    conn.execute('INSERT INTO user_history (id, user_id, emotion, song_id) VALUES (?, ?, ?, ?)',
+    
+    cursor.execute('INSERT INTO user_history (id, user_id, emotion, song_id) VALUES (%s, %s, %s, %s)',
                  (history_id, user_id, emotion, song_id))
+    
     conn.commit()
+    cursor.close()
     conn.close()
 
 # Authentication Routes
@@ -289,19 +324,32 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'user_id' in session:
+        return redirect(url_for('welcome'))
+        
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
         
         conn = get_db_connection()
-        user = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', 
-                          (username, username)).fetchone()
+        cursor = conn.cursor()
+        
+        # Check if the user exists (by username or email)
+        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
+                      (username, username))
+        user = cursor.fetchone()
+        
+        cursor.close()
         conn.close()
         
         if user and check_password_hash(user['password'], password):
+            # Set session variables
+            session.clear()
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['name'] = user['name']
+            
+            # Redirect to welcome page
             return redirect(url_for('welcome'))
         
         flash('Invalid username or password')
@@ -310,6 +358,9 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if 'user_id' in session:
+        return redirect(url_for('welcome'))
+        
     if request.method == 'POST':
         name = request.form['name']
         username = request.form['username']
@@ -317,16 +368,25 @@ def signup():
         password = request.form['password']
         confirm_password = request.form['confirm_password']
         
+        # Validate input
+        if not all([name, username, email, password, confirm_password]):
+            flash('All fields are required')
+            return render_template('signup.html')
+            
         if password != confirm_password:
             flash('Passwords do not match')
             return render_template('signup.html')
-            
+        
         # Check if username or email already exists
         conn = get_db_connection()
-        existing_user = conn.execute('SELECT * FROM users WHERE username = ? OR email = ?', 
-                                (username, email)).fetchone()
+        cursor = conn.cursor()
+        
+        cursor.execute('SELECT * FROM users WHERE username = %s OR email = %s', 
+                      (username, email))
+        existing_user = cursor.fetchone()
         
         if existing_user:
+            cursor.close()
             conn.close()
             flash('Username or email already exists')
             return render_template('signup.html')
@@ -335,18 +395,29 @@ def signup():
         user_id = str(uuid.uuid4())
         hashed_password = generate_password_hash(password)
         
-        conn.execute('INSERT INTO users (id, name, username, email, password) VALUES (?, ?, ?, ?, ?)',
-                   (user_id, name, username, email, hashed_password))
-        conn.commit()
-        conn.close()
-        
-        # Log the user in
-        session['user_id'] = user_id
-        session['username'] = username
-        session['name'] = name
-        
-        return redirect(url_for('welcome'))
-        
+        try:
+            cursor.execute('INSERT INTO users (id, name, username, email, password) VALUES (%s, %s, %s, %s, %s)',
+                       (user_id, name, username, email, hashed_password))
+            conn.commit()
+            
+            # Log the user in
+            session.clear()
+            session['user_id'] = user_id
+            session['username'] = username
+            session['name'] = name
+            
+            cursor.close()
+            conn.close()
+            
+            return redirect(url_for('welcome'))
+            
+        except Exception as e:
+            conn.rollback()
+            cursor.close()
+            conn.close()
+            flash(f'An error occurred during registration: {str(e)}')
+            return render_template('signup.html')
+    
     return render_template('signup.html')
 
 @app.route('/logout')
@@ -407,17 +478,35 @@ def save_song_selection():
 @login_required
 def user_history():
     conn = get_db_connection()
-    history = conn.execute('''
+    cursor = conn.cursor()
+    
+    cursor.execute('''
         SELECT emotion, song_id, timestamp 
         FROM user_history 
-        WHERE user_id = ? 
+        WHERE user_id = %s 
         ORDER BY timestamp DESC
-    ''', (session['user_id'],)).fetchall()
+    ''', (session['user_id'],))
+    
+    history = cursor.fetchall()
+    
+    cursor.close()
     conn.close()
     
     return render_template('history.html', history=history)
 
 if __name__ == '__main__':
-    init_db()  # Initialize the database
+    # Initialize the database on startup
+    try:
+        init_db()
+        print("Database initialized successfully")
+    except Exception as e:
+        print(f"Error initializing database: {str(e)}")
+    
+    # Load emotion detection model
     load_model()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    
+    # Get port from environment variable (for Render deployment)
+    port = int(os.environ.get('PORT', 5000))
+    
+    # Run the Flask app
+    app.run(debug=False, host='0.0.0.0', port=port)
