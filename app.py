@@ -24,7 +24,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = 1800  # 30 minutes
 def get_db_connection():
     """Connect to the PostgreSQL database server"""
     # Get database URL from environment variable (Render provides this)
-    database_url = os.environ.get('DATABASE_URL', 'postgresql://postgres:postgres@localhost:5432/moodify_db')
+    database_url = os.environ.get('DATABASE_URL', 'postgresql://moodify_db_fpmg_user:ISoOmpqy5SWWQ0esQRJF7sifOkLUFeyb@dpg-cvtca995pdvs739ld57g-a.oregon-postgres.render.com/moodify_db_fpmg')
     
     # Parse the URL to get connection parameters
     parsed_url = urlparse(database_url)
