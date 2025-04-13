@@ -401,3 +401,99 @@
 .form-group input:focus {
     animation: focusIn 0.2s ease forwards;
 }
+
+/* Additional CSS for signup page - Add these to your auth.css file */
+
+/* Signup specific styles */
+.signup-box {
+    max-width: 450px;
+}
+
+.auth-redirect-top {
+    text-align: right;
+    margin-bottom: 25px;
+    font-size: 14px;
+    color: #555;
+}
+
+.auth-redirect-top a {
+    color: var(--auth-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.auth-redirect-top a:hover {
+    color: var(--auth-secondary);
+    text-decoration: underline;
+}
+
+/* Improve form row spacing for signup */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 0;
+}
+
+.form-row .form-group {
+    margin-bottom: 20px;
+}
+
+/* Password strength indicator (optional enhancement) */
+.password-strength {
+    height: 5px;
+    width: 100%;
+    background: #e1e1e1;
+    margin-top: 5px;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.password-strength-bar {
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s, background-color 0.3s;
+}
+
+.password-strength-bar.weak {
+    width: 33%;
+    background-color: #f44336;
+}
+
+.password-strength-bar.medium {
+    width: 66%;
+    background-color: #ffa000;
+}
+
+.password-strength-bar.strong {
+    width: 100%;
+    background-color: #4caf50;
+}
+
+/* Media Queries for signup page */
+@media (max-width: 768px) {
+    .signup-right {
+        display: none;
+    }
+    
+    .signup-left {
+        width: 100%;
+    }
+    
+    .signup-box {
+        max-width: 100%;
+    }
+    
+    .auth-redirect-top {
+        text-align: center;
+    }
+    
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-row .form-group {
+        margin-bottom: 15px;
+    }
+}

@@ -10,8 +10,24 @@
 </head>
 <body class="auth-page">
     <div class="auth-container">
+        <div class="auth-left signup-right">
+            <div class="logo-container">
+                <h1 class="logo-text">Moodify</h1>
+                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
+            </div>
+            <p class="tagline">
+                "Welcome to Moodify!<br>
+                Let your emotions guide the<br>
+                music as we tailor the perfect<br>
+                playlist just for you"
+            </p>
+        </div>
+        
         <div class="auth-right signup-left">
             <div class="auth-box signup-box">
+                <h2 class="auth-title">Create Account</h2>
+                <p class="auth-subtitle">Join Moodify to discover your perfect music</p>
+                
                 <p class="auth-redirect-top">Already have an account? <a href="{{ url_for('login') }}">Sign In</a></p>
                 
                 {% with messages = get_flashed_messages() %}
@@ -66,19 +82,6 @@
                     </a>
                 </div>
             </div>
-        </div>
-        
-        <div class="auth-left signup-right">
-            <div class="logo-container">
-                <h1 class="logo-text">Moodify</h1>
-                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
-            </div>
-            <p class="tagline">
-                "Welcome to Moodify!<br>
-                Let your emotions guide the<br>
-                music as we tailor the perfect<br>
-                playtred just for you"
-            </p>
         </div>
     </div>
     
