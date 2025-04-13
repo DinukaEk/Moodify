@@ -9,6 +9,25 @@
 </head>
 <body class="welcome-page">
     <div class="welcome-container">
+        <!-- User profile section in the header -->
+        <div class="user-profile">
+            <div class="user-info" id="userInfo">
+                <span class="user-name">Your name</span>
+                <div class="user-avatar">
+                    <img src="{{ url_for('static', filename='images/user-avatar.jpg') }}" alt="User Avatar">
+                </div>
+                <!-- Dropdown menu -->
+                <div class="user-dropdown" id="userDropdown">
+                    <ul>
+                        <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                        <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a href="{{ url_for('logout') }}" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
         <div class="logo-container">
             <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
         </div>
