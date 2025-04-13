@@ -76,6 +76,12 @@ def init_db():
     cursor.close()
     conn.close()
 
+# Check your database connection code
+try:
+    get_db_connection()  # or whatever connection method you're using
+except Exception as e:
+    print(f"Database connection error: {e}")  # Add proper logging
+
 # Login required decorator
 def login_required(f):
     @wraps(f)
@@ -424,6 +430,16 @@ def signup():
 def logout():
     session.clear()
     return redirect(url_for('login'))
+
+@app.route('/profile')
+def profile():
+    # Temporary placeholder
+    return "Profile page - under construction"
+
+@app.route('/settings')
+def settings():
+    # Temporary placeholder
+    return "Settings page - under construction"
 
 # Application Routes
 @app.route('/welcome')
