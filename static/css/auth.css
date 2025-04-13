@@ -1,6 +1,7 @@
 /* Authentication Pages Styling */
 :root {
-    --auth-primary: #f86f04;
+    --auth-primary: #7c1dc9;
+    --auth-secondary: #3214a8;
     --auth-text: #fff;
     --auth-background: rgba(255, 255, 255, 0.2);
     --auth-box-bg: rgba(255, 255, 255, 0.2);
@@ -13,8 +14,11 @@
     padding: 0;
     height: 100vh;
     width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     overflow: hidden;
-    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.3)), url('../images/auth-bg.jpg');
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.4)), url('../images/auth-bg.jpg');
     background-size: cover;
     background-position: center;
     color: var(--auth-text);
@@ -26,9 +30,10 @@
     width: 90%;
     height: 600px;
     background-color: #fff;
-    border-radius: 15px;
-    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    position: relative;
 }
 
 .auth-left, .auth-right {
@@ -40,9 +45,23 @@
 }
 
 .auth-left {
-    background: linear-gradient(135deg, #7c1dc9 0%, #3214a8 100%);
+    background: linear-gradient(135deg, var(--auth-primary) 0%, var(--auth-secondary) 100%);
     color: white;
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-left::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
+    opacity: 0.6;
+    z-index: 0;
 }
 
 .logo-container {
@@ -50,24 +69,41 @@
     flex-direction: column;
     align-items: center;
     margin-bottom: 30px;
+    position: relative;
+    z-index: 1;
 }
 
 .logo {
     width: 150px;
     height: auto;
     margin-bottom: 20px;
+    filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
 }
 
 .logo-text {
     font-size: 48px;
     margin: 0;
     font-weight: 700;
+    letter-spacing: 1px;
+    background: linear-gradient(to right, #fff, #e1e1ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .tagline {
     font-size: 16px;
-    line-height: 1.6;
+    line-height: 1.8;
     opacity: 0.9;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
 .auth-box {
@@ -77,10 +113,11 @@
 }
 
 .auth-title {
-    font-size: 28px;
+    font-size: 32px;
     margin-bottom: 10px;
     text-align: center;
     color: #333;
+    font-weight: 700;
 }
 
 .auth-subtitle {
@@ -110,15 +147,18 @@
 
 .form-group input {
     width: 100%;
-    padding: 12px 15px;
+    padding: 14px 15px;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 14px;
-    transition: border-color 0.3s;
+    transition: all 0.3s;
+    background-color: #f9f9f9;
 }
 
 .form-group input:focus {
-    border-color: #7c1dc9;
+    border-color: var(--auth-primary);
+    background-color: #fff;
+    box-shadow: 0 0 0 3px rgba(124, 29, 201, 0.1);
     outline: none;
 }
 
@@ -137,12 +177,15 @@
     padding-left: 25px;
     cursor: pointer;
     color: #555;
+    user-select: none;
 }
 
 .checkbox-container input {
     position: absolute;
     opacity: 0;
     cursor: pointer;
+    height: 0;
+    width: 0;
 }
 
 .checkmark {
@@ -152,7 +195,8 @@
     height: 18px;
     width: 18px;
     background-color: #f1f1f1;
-    border-radius: 3px;
+    border-radius: 4px;
+    transition: all 0.2s;
 }
 
 .checkbox-container:hover input ~ .checkmark {
@@ -160,7 +204,7 @@
 }
 
 .checkbox-container input:checked ~ .checkmark {
-    background-color: #7c1dc9;
+    background-color: var(--auth-primary);
 }
 
 .checkmark:after {
@@ -184,26 +228,42 @@
 }
 
 .forgot-password {
-    color: #7c1dc9;
+    color: var(--auth-primary);
     text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.forgot-password:hover {
+    color: var(--auth-secondary);
+    text-decoration: underline;
 }
 
 .auth-button {
     width: 100%;
-    padding: 12px;
-    background: linear-gradient(135deg, #7c1dc9 0%, #3214a8 100%);
+    padding: 14px;
+    background: linear-gradient(135deg, var(--auth-primary) 0%, var(--auth-secondary) 100%);
     color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 10px;
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(124, 29, 201, 0.3);
+    position: relative;
+    overflow: hidden;
 }
 
 .auth-button:hover {
-    background: linear-gradient(135deg, #6a19ab 0%, #2a108f 100%);
+    background: linear-gradient(135deg, #8a20dd 0%, #3c19bd 100%);
     transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(124, 29, 201, 0.4);
+}
+
+.auth-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 10px rgba(124, 29, 201, 0.3);
 }
 
 .auth-separator {
@@ -235,19 +295,21 @@
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 10px 15px;
+    padding: 12px 15px;
     background-color: white;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 10px;
     color: #333;
     text-decoration: none;
     font-weight: 500;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .google-btn:hover {
     background-color: #f5f5f5;
     transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 .google-btn img {
@@ -264,20 +326,15 @@
 }
 
 .auth-redirect a {
-    color: #7c1dc9;
+    color: var(--auth-primary);
     text-decoration: none;
     font-weight: 500;
+    transition: color 0.2s;
 }
 
 .auth-redirect a:hover {
     text-decoration: underline;
-}
-
-.auth-redirect-top {
-    text-align: right;
-    margin-bottom: 20px;
-    font-size: 14px;
-    color: #555;
+    color: var(--auth-secondary);
 }
 
 .alert {
@@ -288,6 +345,7 @@
     color: white;
     background-color: #f44336;
     transition: opacity 0.5s ease-out;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
 }
 
 .alert-error {
@@ -304,6 +362,8 @@
         flex-direction: column;
         height: auto;
         width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
     }
     
     .auth-left, .auth-right {
@@ -318,11 +378,11 @@
         width: 100px;
     }
     
-    .signup-right {
+    .auth-left {
         display: none;
     }
     
-    .signup-left {
+    .auth-right {
         width: 100%;
     }
     
@@ -330,4 +390,14 @@
         flex-direction: column;
         gap: 0;
     }
+}
+
+/* Animation for inputs */
+@keyframes focusIn {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.form-group input:focus {
+    animation: focusIn 0.2s ease forwards;
 }
