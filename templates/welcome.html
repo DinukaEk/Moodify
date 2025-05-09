@@ -8,31 +8,49 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="welcome-page">
-    <div class="welcome-container">
-        <!-- User profile section in the header -->
-        <div class="user-profile">
-            <div class="user-info" id="userInfo">
-                <span class="user-name">Your name</span>
-                <div class="user-avatar">
-                    <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User Avatar">
-                </div>
-                <!-- Dropdown menu -->
-                <div class="user-dropdown" id="userDropdown">
-                    <ul>
-                        <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
-                        <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
-                        <li class="dropdown-divider"></li>
-                        <li><a href="{{ url_for('logout') }}" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
-                    </ul>
+    <!-- Fixed navigation bar -->
+    <header class="main-header">
+        <div class="navbar">
+            <div class="logo-nav">
+                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="nav-logo">
+            </div>
+            
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="#detect-section" class="nav-link">Detect Emotion</a></li>
+                    <li><a href="#upload-section" class="nav-link">Upload Image</a></li>
+                    <li><a href="#select-section" class="nav-link">Select Emotion</a></li>
+                </ul>
+            </nav>
+            
+            <!-- User profile in the navbar -->
+            <div class="user-profile-nav">
+                <div class="user-info" id="userInfo">
+                    <span class="user-name">{{ session.get('name', 'User') }}</span>
+                    <div class="user-avatar">
+                        <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User Avatar">
+                    </div>
+                    <!-- Dropdown menu -->
+                    <div class="user-dropdown" id="userDropdown">
+                        <ul>
+                            <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                            <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                            <li class="dropdown-divider"></li>
+                            <li><a href="{{ url_for('logout') }}" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-        
-        <div class="logo-container">
-            <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
-        </div>
-        
-        <div class="welcome-content">
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-content">
+            <div class="logo-container">
+                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
+            </div>
+            
             <h1>Welcome to Moodify</h1>
             <p class="tagline">Discover music that matches your mood</p>
             
@@ -56,25 +74,194 @@
                 </div>
             </div>
             
-            <a href="{{ url_for('detect') }}" class="start-button">
+            <a href="#detect-section" class="start-button">
                 Get Started <i class="fas fa-arrow-right"></i>
             </a>
+        </div>
+    </section>
+
+    <!-- Detect Emotion Section -->
+    <section id="detect-section" class="section detect-section">
+        <div class="section-container">
+            <h2 class="section-title">Detect Your Emotion</h2>
+            <p class="section-description">Our AI will analyze your facial expression through your webcam</p>
             
-            <div class="how-it-works">
-                <h2>How It Works</h2>
-                <ol class="steps">
-                    <li>Allow camera access when prompted</li>
-                    <li>Our AI detects your facial expression</li>
-                    <li>We analyze your emotional state</li>
-                    <li>Receive personalized music recommendations</li>
-                </ol>
+            <div class="detect-content">
+                <div class="camera-container">
+                    <div class="video-container">
+                        <img src="{{ url_for('static', filename='images/camera-placeholder.jpg') }}" alt="Camera" class="camera-placeholder">
+                        <video id="video" autoplay></video>
+                    </div>
+                    
+                    <div class="camera-controls">
+                        <button id="startCamera" class="action-button">
+                            <i class="fas fa-camera"></i> Start Camera
+                        </button>
+                        <button id="captureImage" class="action-button" disabled>
+                            <i class="fas fa-camera-retro"></i> Capture Image
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="emotion-result">
+                    <div class="emotion-placeholder">
+                        <i class="fas fa-dizzy"></i>
+                        <p>Your detected emotion will appear here</p>
+                    </div>
+                    <div id="detectedEmotion" style="display: none;">
+                        <h3>Detected Emotion: <span id="emotionText"></span></h3>
+                        <div id="emotionConfidence"></div>
+                        
+                        <a href="{{ url_for('recommendations') }}" id="getRecommendations" class="action-button continue-button" style="display: none;">
+                            <i class="fas fa-music"></i> Get Music Recommendations
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-tip">
+                <i class="fas fa-lightbulb"></i>
+                <p>Make sure you're in a well-lit environment for better emotion detection</p>
             </div>
         </div>
-        
-        <footer class="welcome-footer">
-            <p>© 2025 Moodify</p>
-        </footer>
-    </div>
+    </section>
+
+    <!-- Upload Image Section -->
+    <section id="upload-section" class="section upload-section">
+        <div class="section-container">
+            <h2 class="section-title">Upload Your Photo</h2>
+            <p class="section-description">Upload a photo of yourself to detect your emotion</p>
+            
+            <div class="upload-content">
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop your image here or</p>
+                        <label for="imageUpload" class="upload-button">Choose File</label>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="preview-container" id="previewContainer" style="display: none;">
+                        <img id="imagePreview" src="#" alt="Preview">
+                        <button id="analyzeImage" class="action-button">
+                            <i class="fas fa-search"></i> Analyze Emotion
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="upload-emotion-result">
+                    <div class="emotion-placeholder">
+                        <i class="fas fa-dizzy"></i>
+                        <p>Your detected emotion will appear here</p>
+                    </div>
+                    <div id="uploadDetectedEmotion" style="display: none;">
+                        <h3>Detected Emotion: <span id="uploadEmotionText"></span></h3>
+                        <div id="uploadEmotionConfidence"></div>
+                        
+                        <a href="{{ url_for('recommendations') }}" id="uploadGetRecommendations" class="action-button continue-button" style="display: none;">
+                            <i class="fas fa-music"></i> Get Music Recommendations
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-tip">
+                <i class="fas fa-lightbulb"></i>
+                <p>Upload a clear photo of your face for the most accurate results</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Select Emotion Section -->
+    <section id="select-section" class="section select-section">
+        <div class="section-container">
+            <h2 class="section-title">Select Your Emotion</h2>
+            <p class="section-description">Choose how you're feeling right now to get personalized music recommendations</p>
+            
+            <div class="emotion-grid">
+                <div class="emotion-item" data-emotion="Happy">
+                    <div class="emotion-icon">😊</div>
+                    <p>Happy</p>
+                </div>
+                <div class="emotion-item" data-emotion="Sad">
+                    <div class="emotion-icon">😢</div>
+                    <p>Sad</p>
+                </div>
+                <div class="emotion-item" data-emotion="Angry">
+                    <div class="emotion-icon">😠</div>
+                    <p>Angry</p>
+                </div>
+                <div class="emotion-item" data-emotion="Surprise">
+                    <div class="emotion-icon">😲</div>
+                    <p>Surprise</p>
+                </div>
+                <div class="emotion-item" data-emotion="Fear">
+                    <div class="emotion-icon">😨</div>
+                    <p>Fear</p>
+                </div>
+                <div class="emotion-item" data-emotion="Disgust">
+                    <div class="emotion-icon">🤢</div>
+                    <p>Disgust</p>
+                </div>
+                <div class="emotion-item" data-emotion="Neutral">
+                    <div class="emotion-icon">😐</div>
+                    <p>Neutral</p>
+                </div>
+            </div>
+            
+            <div id="selectedEmotionSongs" class="songs-container" style="display: none;">
+                <h3>Music for your <span id="selectedEmotionText"></span> mood</h3>
+                <div id="songsList" class="songs-grid">
+                    <!-- Songs will be populated here via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="section how-it-works-section">
+        <div class="section-container">
+            <h2 class="section-title">How It Works</h2>
+            
+            <div class="steps-container">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Choose Your Method</h3>
+                        <p>Use webcam, upload a photo, or select your mood directly</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>Emotion Analysis</h3>
+                        <p>Our AI analyzes your emotional state</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Get Recommendations</h3>
+                        <p>Receive personalized music that matches your mood</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <h3>Enjoy Your Music</h3>
+                        <p>Listen instantly and elevate your mood</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="main-footer">
+        <p>© 2025 Moodify - Your Emotion-Based Music Recommender</p>
+    </footer>
     
     <script src="{{ url_for('static', filename='js/welcome.js') }}"></script>
 </body>
