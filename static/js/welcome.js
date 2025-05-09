@@ -128,12 +128,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     emotionText.className = '';
                     emotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
                     
+                    // Store the captured image and emotion data in session storage
+                    sessionStorage.setItem('capturedImage', imageData);
+                    sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
+                    
+                    // Get songs for the detected emotion
+                    const songs = getEmotionSongs(data.dominant_emotion);
+                    sessionStorage.setItem('recommendations', JSON.stringify(songs));
+                    
                     // Show the recommendations button
                     if (getRecommendationsBtn) {
                         getRecommendationsBtn.style.display = 'inline-flex';
                         
                         // Update the href to include the emotion
-                        getRecommendationsBtn.href = `${getRecommendationsBtn.href}?emotion=${data.dominant_emotion}`;
+                        const baseUrl = getRecommendationsBtn.getAttribute('href').split('?')[0];
+                        getRecommendationsBtn.href = `${baseUrl}?emotion=${data.dominant_emotion}`;
                     }
                 }
             })
@@ -244,12 +253,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     uploadEmotionText.className = '';
                     uploadEmotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
                     
+                    // Store the captured image and emotion data in session storage
+                    sessionStorage.setItem('capturedImage', imagePreview.src);
+                    sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
+                    
+                    // Get songs for the detected emotion
+                    const songs = getEmotionSongs(data.dominant_emotion);
+                    sessionStorage.setItem('recommendations', JSON.stringify(songs));
+                    
                     // Show the recommendations button
                     if (uploadGetRecommendationsBtn) {
                         uploadGetRecommendationsBtn.style.display = 'inline-flex';
                         
                         // Update the href to include the emotion
-                        uploadGetRecommendationsBtn.href = `${uploadGetRecommendationsBtn.href}?emotion=${data.dominant_emotion}`;
+                        const baseUrl = uploadGetRecommendationsBtn.getAttribute('href').split('?')[0];
+                        uploadGetRecommendationsBtn.href = `${baseUrl}?emotion=${data.dominant_emotion}`;
                     }
                 }
             })
@@ -260,14 +278,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Select emotion functionality
-    const emotionItems = document.querySelectorAll('.emotion-item');
-    const selectedEmotionSongs = document.getElementById('selectedEmotionSongs');
-    const selectedEmotionText = document.getElementById('selectedEmotionText');
-    const songsList = document.getElementById('songsList');
-
-    if (emotionItems.length > 0) {
-        // Define emotion songs with their recommendations
+    // Define emotion songs with their recommendations - made available globally in this script
+    function getEmotionSongs(emotion) {
         const emotionSongs = {
             "Angry": [
                 {"title": "Break Stuff", "artist": "Limp Bizkit", "url": "https://open.spotify.com/track/5cZqsjJuBIcjqyVaZd5Ill"},
@@ -312,34 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 {"title": "Radioactive", "artist": "Imagine Dragons", "url": "https://youtu.be/ktvTqknDobU"}
             ]
         };
+        
+        return emotionSongs[emotion] || [];
+    }
 
-        // Function to get embedded player
-        function getEmbeddedPlayer(url) {
-            if (url.includes("youtube.com") || url.includes("youtu.be")) {
-                // Extract YouTube video ID
-                let videoId;
-                if (url.includes("youtube.com")) {
-                    if (url.includes("watch?v=")) {
-                        videoId = url.split("watch?v=")[1].split("&")[0];
-                    } else {
-                        videoId = url.split("/").pop();
-                    }
-                } else if (url.includes("youtu.be")) {
-                    videoId = url.split("/").pop();
-                }
-                
-                return `<iframe width="100%" height="215" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-            } else if (url.includes("spotify.com")) {
-                // Extract Spotify track ID
-                if (url.includes("track/")) {
-                    const trackId = url.split("track/")[1];
-                    return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="100%" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
-                }
-            }
-            
-            return `<a href="${url}" target="_blank" class="song-link">Open in new tab</a>`;
-        }
+    // Select emotion functionality
+    const emotionItems = document.querySelectorAll('.emotion-item');
+    const selectedEmotionSongs = document.getElementById('selectedEmotionSongs');
+    const selectedEmotionText = document.getElementById('selectedEmotionText');
+    const songsList = document.getElementById('songsList');
 
+    if (emotionItems.length > 0) {
         emotionItems.forEach(item => {
             item.addEventListener('click', function() {
                 // Get the selected emotion
@@ -348,6 +343,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Highlight the selected emotion
                 emotionItems.forEach(el => el.classList.remove('selected'));
                 this.classList.add('selected');
+                
+                // Store the selected emotion data for recommendations page
+                sessionStorage.setItem('detectedEmotion', emotion);
+                
+                // Get songs for the selected emotion
+                const songs = getEmotionSongs(emotion);
+                sessionStorage.setItem('recommendations', JSON.stringify(songs));
                 
                 // Show the songs section
                 if (selectedEmotionSongs) {
@@ -358,8 +360,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     songsList.innerHTML = '';
                     
                     // Add songs for the selected emotion
-                    const songs = emotionSongs[emotion] || [];
-                    
                     songs.forEach(song => {
                         const songCard = document.createElement('div');
                         songCard.className = 'song-card';
@@ -467,4 +467,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     window.addEventListener('scroll', checkSections);
     checkSections(); // Run once on page load
+    
+    // Function to get embedded player
+    function getEmbeddedPlayer(url) {
+        if (url.includes("youtube.com") || url.includes("youtu.be")) {
+            // Extract YouTube video ID
+            let videoId;
+            if (url.includes("youtube.com")) {
+                if (url.includes("watch?v=")) {
+                    videoId = url.split("watch?v=")[1].split("&")[0];
+                } else {
+                    videoId = url.split("/").pop();
+                }
+            } else if (url.includes("youtu.be")) {
+                videoId = url.split("/").pop();
+            }
+            
+            return `<iframe width="100%" height="215" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+        } else if (url.includes("spotify.com")) {
+            // Extract Spotify track ID
+            if (url.includes("track/")) {
+                const trackId = url.split("track/")[1];
+                return `<iframe src="https://open.spotify.com/embed/track/${trackId}" width="100%" height="80" frameborder="0" allowtransparency="true" allow="encrypted-media"></iframe>`;
+            }
+        }
+        
+        return `<a href="${url}" target="_blank" class="song-link">Open in new tab</a>`;
+    }
 });
