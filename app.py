@@ -546,30 +546,45 @@ def process_emotion():
         if not data or 'image' not in data:
             return jsonify({"error": "No image data provided"}), 400
 
-        frame_data = data.get('image')
-        if not frame_data:
-            return jsonify({"error": "Empty image data"}), 400
-
-        # Process the frame
-        display_img, predictions, dominant_emotion = detect_emotion(frame_data)
-
-        if not dominant_emotion:
-            return jsonify({"error": "No face detected or emotion recognized"}), 400
-
-        # Save to history
-        save_user_history(session['user_id'], dominant_emotion)
+        # Get the base64 image data
+        image_data = data['image']
         
-        # Get recommendations from database
-        recommendations = get_songs_for_emotion(dominant_emotion)
-        
-        return jsonify({
-            "dominant_emotion": dominant_emotion,
-            "recommendations": recommendations
-        })
+        # Remove the data URL prefix if present
+        if image_data.startswith('data:image'):
+            image_data = image_data.split(',')[1]
+
+        try:
+            # Decode the base64 image
+            image_bytes = base64.b64decode(image_data)
+            image = Image.open(io.BytesIO(image_bytes))
+            
+            # Convert to OpenCV format
+            opencv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            
+            # Process the image
+            display_img, predictions, dominant_emotion = detect_emotion(opencv_img)
+            
+            if not dominant_emotion:
+                return jsonify({"error": "No faces detected or emotion recognized"}), 400
+
+            # Save to history
+            save_user_history(session['user_id'], dominant_emotion)
+            
+            # Get recommendations
+            recommendations = get_songs_for_emotion(dominant_emotion)
+            
+            return jsonify({
+                "dominant_emotion": dominant_emotion,
+                "recommendations": recommendations
+            })
+            
+        except Exception as e:
+            print(f"Error processing image: {str(e)}")
+            return jsonify({"error": "Failed to process image"}), 500
 
     except Exception as e:
-        print(f"Error processing emotion: {str(e)}")
-        return jsonify({"error": "Failed to process image"}), 500
+        print(f"Error in process_emotion: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500
 
 # Add this new route for getting songs by emotion
 @app.route('/get_songs/<emotion>')

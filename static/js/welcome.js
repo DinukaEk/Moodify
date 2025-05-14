@@ -216,118 +216,132 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadEmotionText = document.getElementById('uploadEmotionText');
     const uploadGetRecommendationsBtn = document.getElementById('uploadGetRecommendations');
 
-    if (uploadArea && imageUpload) {
-        // Handle drag and drop
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, preventDefaults, false);
-        });
+    // Handle drag and drop
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, highlight, false);
-        });
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadArea.addEventListener(eventName, unhighlight, false);
-        });
-
-        function highlight() {
-            uploadArea.classList.add('highlight');
-        }
-
-        function unhighlight() {
-            uploadArea.classList.remove('highlight');
-        }
-
-        uploadArea.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
-            if (files.length > 0) {
-                handleFiles(files);
-            }
-        }
-
-        imageUpload.addEventListener('change', function() {
-            if (this.files.length > 0) {
-                handleFiles(this.files);
-            }
-        });
-
-        function handleFiles(files) {
-            const file = files[0];
-            
-            if (!file.type.match('image.*')) {
-                alert('Please select an image file');
-                return;
-            }
-            
-            const reader = new FileReader();
-            
-            reader.onload = function(e) {
-                imagePreview.src = e.target.result;
-                uploadArea.style.display = 'none';
-                previewContainer.style.display = 'block';
-            };
-            
-            reader.readAsDataURL(file);
-        }
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
     }
 
+    function highlight() {
+        uploadArea.classList.add('highlight');
+    }
+
+    function unhighlight() {
+        uploadArea.classList.remove('highlight');
+    }
+
+    // Handle dropped files
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+
+    // Handle selected files
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files.length > 0) {
+            handleFiles(this.files);
+        }
+    });
+
+    function handleFiles(files) {
+        const file = files[0];
+        
+        // Validate file type
+        if (!file.type.match('image.*')) {
+            alert('Please select an image file (JPEG, PNG, etc.)');
+            return;
+        }
+        
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+            imagePreview.src = e.target.result;
+            uploadArea.style.display = 'none';
+            previewContainer.style.display = 'block';
+        };
+        
+        reader.onerror = function() {
+            alert('Error reading file. Please try another image.');
+        };
+        
+        reader.readAsDataURL(file);
+    }
+
+    // Analyze the uploaded image
     if (analyzeImageBtn && imagePreview) {
-        analyzeImageBtn.addEventListener('click', function() {
-            // Send the image to the backend for analysis
-            fetch('/process_emotion', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: imagePreview.src }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                    return;
-                }
-                
-                // Display the detected emotion
-                if (uploadDetectedEmotion) {
-                    uploadDetectedEmotion.style.display = 'block';
-                    uploadEmotionText.textContent = data.dominant_emotion;
+        analyzeImageBtn.addEventListener('click', async function() {
+            if (!imagePreview.src || imagePreview.src.startsWith('data:')) {
+                try {
+                    analyzeImageBtn.disabled = true;
+                    analyzeImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
                     
-                    // Apply emotion specific styling
-                    uploadEmotionText.className = '';
-                    uploadEmotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
-                    
-                    // Store the captured image and emotion data in session storage
-                    sessionStorage.setItem('capturedImage', imagePreview.src);
-                    sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
-                    
-                    // Get songs for the detected emotion
-                    const songs = getEmotionSongs(data.dominant_emotion);
-                    sessionStorage.setItem('recommendations', JSON.stringify(songs));
-                    
-                    // Show the recommendations button
-                    if (uploadGetRecommendationsBtn) {
-                        uploadGetRecommendationsBtn.style.display = 'inline-flex';
-                        
-                        // Update the href to include the emotion
-                        const baseUrl = uploadGetRecommendationsBtn.getAttribute('href').split('?')[0];
-                        uploadGetRecommendationsBtn.href = `${baseUrl}?emotion=${data.dominant_emotion}`;
+                    // Process the image
+                    const response = await fetch('/process_emotion', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            image: imagePreview.src 
+                        }),
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.status}`);
                     }
+
+                    const data = await response.json();
+
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Display results
+                    if (uploadDetectedEmotion) {
+                        uploadDetectedEmotion.style.display = 'block';
+                        uploadEmotionText.textContent = data.dominant_emotion;
+                        
+                        // Apply emotion styling
+                        uploadEmotionText.className = '';
+                        uploadEmotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
+                        
+                        // Store data for recommendations page
+                        sessionStorage.setItem('capturedImage', imagePreview.src);
+                        sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
+                        sessionStorage.setItem('recommendations', JSON.stringify(data.recommendations));
+                        
+                        // Show recommendations button
+                        if (uploadGetRecommendationsBtn) {
+                            uploadGetRecommendationsBtn.style.display = 'inline-flex';
+                            uploadGetRecommendationsBtn.href = `/recommendations?emotion=${encodeURIComponent(data.dominant_emotion)}`;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                    alert('Error processing image: ' + error.message);
+                } finally {
+                    analyzeImageBtn.disabled = false;
+                    analyzeImageBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Emotion';
                 }
-            })
-            .catch(error => {
-                console.error('Error processing image:', error);
-                alert('There was an error processing your image');
-            });
+            } else {
+                alert('Please upload an image first');
+            }
         });
     }
 
