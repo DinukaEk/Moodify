@@ -134,51 +134,6 @@ def get_songs_for_emotion(emotion):
         'url': song['url']
     } for song in songs]
 
-# Update the process_emotion route to use database
-@app.route('/process_emotion', methods=['POST'])
-@login_required
-def process_emotion():
-    data = request.json
-    frame_data = data.get('image')
-    
-    result = process_frame(frame_data)
-    
-    # Save the emotion detection result to user history
-    if 'user_id' in session and 'dominant_emotion' in result:
-        save_user_history(session['user_id'], result['dominant_emotion'])
-    
-    # Get songs from database instead of hardcoded list
-    if 'dominant_emotion' in result:
-        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
-    
-    return jsonify(result)
-
-# Add this new route for getting songs by emotion
-@app.route('/get_songs/<emotion>')
-@login_required
-def get_songs(emotion):
-    songs = get_songs_for_emotion(emotion)
-    return jsonify(songs)
-
-# Update the process_emotion route
-@app.route('/process_emotion', methods=['POST'])
-@login_required
-def process_emotion():
-    data = request.json
-    frame_data = data.get('image')
-    
-    result = process_frame(frame_data)
-    
-    # Save the emotion detection result to user history
-    if 'user_id' in session and 'dominant_emotion' in result:
-        save_user_history(session['user_id'], result['dominant_emotion'])
-    
-    # Get songs from database
-    if 'dominant_emotion' in result:
-        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
-    
-    return jsonify(result)
-
 # Helper function to convert YouTube URLs to embedded format
 def get_embedded_player(url):
     if "youtube.com" in url or "youtu.be" in url:
@@ -604,7 +559,18 @@ def process_emotion():
     if 'user_id' in session and 'dominant_emotion' in result:
         save_user_history(session['user_id'], result['dominant_emotion'])
     
+    # Get songs from database instead of hardcoded list
+    if 'dominant_emotion' in result:
+        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
+    
     return jsonify(result)
+
+# Add this new route for getting songs by emotion
+@app.route('/get_songs/<emotion>')
+@login_required
+def get_songs(emotion):
+    songs = get_songs_for_emotion(emotion)
+    return jsonify(songs)
 
 @app.route('/save_song_selection', methods=['POST'])
 @login_required
