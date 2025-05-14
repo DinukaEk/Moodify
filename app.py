@@ -161,82 +161,73 @@ def get_embedded_player(url):
 
 # Function to detect emotion in an image
 def detect_emotion(image):
-    global model
-    
-    # Convert PIL image to cv2 format if needed
-    if isinstance(image, Image.Image):
-        opencv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-    else:
-        opencv_img = image
-    
-    # Create a copy for drawing on
-    display_img = opencv_img.copy()
-    
-    # Convert to grayscale
-    gray = cv2.cvtColor(opencv_img, cv2.COLOR_BGR2GRAY)
-    
-    # Load the pre-trained face cascade classifier
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    
-    # Detect faces
-    faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-    
-    results = []
-    
-    # If no faces found
-    if len(faces) == 0:
-        return display_img, [], "No faces detected"
-    
-    # Draw rectangle around faces and predict emotion
-    for (x, y, w, h) in faces:
-        # Extract face ROI
-        face_roi = gray[y:y+h, x:x+w]
+    try:
+        if model is None:
+            load_model()
+            if model is None:
+                raise Exception("Model failed to load")
+
+        # Convert image to OpenCV format
+        if isinstance(image, str):  # Base64 string
+            image_data = base64.b64decode(image.split(',')[1])
+            image = Image.open(io.BytesIO(image_data))
+            
+        if isinstance(image, Image.Image):
+            opencv_img = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+        else:
+            opencv_img = image
+
+        display_img = opencv_img.copy()
+        gray = cv2.cvtColor(opencv_img, cv2.COLOR_BGR2GRAY)
         
-        # Resize to match model input size (48x48)
-        face_roi = cv2.resize(face_roi, (48, 48))
-        
-        # Prepare image for prediction
-        face_roi = face_roi.astype("float") / 255.0
-        face_roi = np.expand_dims(face_roi, axis=0)
-        face_roi = np.expand_dims(face_roi, axis=-1)
-        
-        # Make prediction
-        prediction = model.predict(face_roi)
-        emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
-        emotion = emotion_labels[np.argmax(prediction)]
-        probability = float(np.max(prediction))
-        
-        # Get emotional color
-        emotion_colors = {
-            "Angry": (0, 0, 255),      # Red
-            "Disgust": (0, 128, 128),  # Brown
-            "Fear": (128, 0, 128),     # Purple
-            "Happy": (0, 255, 255),    # Yellow
-            "Neutral": (128, 128, 128),# Gray
-            "Sad": (255, 0, 0),        # Blue
-            "Surprise": (0, 165, 255)  # Orange
-        }
-        color = emotion_colors.get(emotion, (0, 255, 0))
-        
-        # Draw rectangle and emotion label
-        cv2.rectangle(display_img, (x, y), (x+w, y+h), color, 2)
-        cv2.putText(display_img, f"{emotion}: {probability:.2f}", 
-                    (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, 
-                    color, 2)
-        
-        results.append({
-            'emotion': emotion,
-            'probability': probability,
-            'position': (x, y, w, h)
-        })
-    
-    # Determine the dominant emotion
-    if results:
-        dominant_emotion = max(results, key=lambda x: x['probability'])['emotion']
-    else:
-        dominant_emotion = None
-    
-    return display_img, results, dominant_emotion
+        # Load face cascade
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+        faces = face_cascade.detectMultiScale(gray, 1.1, 4)
+
+        if len(faces) == 0:
+            return display_img, [], "No faces detected"
+
+        results = []
+        for (x, y, w, h) in faces:
+            face_roi = gray[y:y+h, x:x+w]
+            face_roi = cv2.resize(face_roi, (48, 48))
+            face_roi = face_roi.astype("float") / 255.0
+            face_roi = np.expand_dims(face_roi, axis=0)
+            face_roi = np.expand_dims(face_roi, axis=-1)
+
+            prediction = model.predict(face_roi)
+            emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Neutral', 'Sad', 'Surprise']
+            emotion = emotion_labels[np.argmax(prediction)]
+            probability = float(np.max(prediction))
+
+            # Draw on image
+            emotion_colors = {
+                "Angry": (0, 0, 255),
+                "Disgust": (0, 128, 128),
+                "Fear": (128, 0, 128),
+                "Happy": (0, 255, 255),
+                "Neutral": (128, 128, 128),
+                "Sad": (255, 0, 0),
+                "Surprise": (0, 165, 255)
+            }
+            color = emotion_colors.get(emotion, (0, 255, 0))
+            cv2.rectangle(display_img, (x, y), (x+w, y+h), color, 2)
+            cv2.putText(display_img, f"{emotion}: {probability:.2f}", 
+                        (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, 
+                        color, 2)
+
+            results.append({
+                'emotion': emotion,
+                'probability': probability,
+                'position': (x, y, w, h)
+            })
+
+        dominant_emotion = max(results, key=lambda x: x['probability'])['emotion'] if results else None
+        return display_img, results, dominant_emotion
+
+    except Exception as e:
+        print(f"Error in detect_emotion: {str(e)}")
+        return None, [], str(e)
 
 # For webcam streaming in real-time
 def generate_frames():
@@ -550,20 +541,35 @@ def video_feed():
 @app.route('/process_emotion', methods=['POST'])
 @login_required
 def process_emotion():
-    data = request.json
-    frame_data = data.get('image')
-    
-    result = process_frame(frame_data)
-    
-    # Save the emotion detection result to user history
-    if 'user_id' in session and 'dominant_emotion' in result:
-        save_user_history(session['user_id'], result['dominant_emotion'])
-    
-    # Get songs from database instead of hardcoded list
-    if 'dominant_emotion' in result:
-        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
-    
-    return jsonify(result)
+    try:
+        data = request.json
+        if not data or 'image' not in data:
+            return jsonify({"error": "No image data provided"}), 400
+
+        frame_data = data.get('image')
+        if not frame_data:
+            return jsonify({"error": "Empty image data"}), 400
+
+        # Process the frame
+        display_img, predictions, dominant_emotion = detect_emotion(frame_data)
+
+        if not dominant_emotion:
+            return jsonify({"error": "No face detected or emotion recognized"}), 400
+
+        # Save to history
+        save_user_history(session['user_id'], dominant_emotion)
+        
+        # Get recommendations from database
+        recommendations = get_songs_for_emotion(dominant_emotion)
+        
+        return jsonify({
+            "dominant_emotion": dominant_emotion,
+            "recommendations": recommendations
+        })
+
+    except Exception as e:
+        print(f"Error processing emotion: {str(e)}")
+        return jsonify({"error": "Failed to process image"}), 500
 
 # Add this new route for getting songs by emotion
 @app.route('/get_songs/<emotion>')

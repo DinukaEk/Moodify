@@ -71,52 +71,96 @@ document.addEventListener('DOMContentLoaded', function() {
     const cameraPlaceholder = document.querySelector('.camera-placeholder');
     const detectedEmotion = document.getElementById('detectedEmotion');
     const emotionText = document.getElementById('emotionText');
-    const emotionConfidence = document.getElementById('emotionConfidence');
     const getRecommendationsBtn = document.getElementById('getRecommendations');
+
+    let stream = null;
 
     if (startCameraBtn && videoElement) {
         startCameraBtn.addEventListener('click', async function() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                // Stop any existing stream
+                if (stream) {
+                    stream.getTracks().forEach(track => track.stop());
+                }
+
+                // Get user media with better constraints
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: {
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    },
+                    audio: false
+                });
+                
                 videoElement.srcObject = stream;
                 videoElement.style.display = 'block';
+                
                 if (cameraPlaceholder) {
                     cameraPlaceholder.style.display = 'none';
                 }
+                
                 startCameraBtn.disabled = true;
                 captureImageBtn.disabled = false;
+                
+                // Add error listener to the video element
+                videoElement.addEventListener('error', (e) => {
+                    console.error('Video error:', e);
+                    alert('Camera error occurred. Please try again.');
+                });
+                
             } catch (err) {
                 console.error('Error accessing camera:', err);
-                alert('Could not access the camera. Please make sure it is connected and permissions are granted.');
+                alert('Could not access the camera. Please make sure permissions are granted and camera is connected.');
             }
         });
     }
 
     if (captureImageBtn && videoElement) {
-        captureImageBtn.addEventListener('click', function() {
-            // Create a canvas element to capture the image
-            const canvas = document.createElement('canvas');
-            canvas.width = videoElement.videoWidth;
-            canvas.height = videoElement.videoHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
-            
-            // Convert the captured image to base64
-            const imageData = canvas.toDataURL('image/jpeg');
-            
-            // Send to backend for emotion analysis
-            fetch('/process_emotion', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ image: imageData }),
-            })
-            .then(response => response.json())
-            .then(data => {
+        captureImageBtn.addEventListener('click', async function() {
+            if (!stream) {
+                alert('Please start the camera first');
+                return;
+            }
+
+            try {
+                // Create canvas and capture image
+                const canvas = document.createElement('canvas');
+                canvas.width = videoElement.videoWidth;
+                canvas.height = videoElement.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+                
+                // Convert to base64 with error handling
+                let imageData;
+                try {
+                    imageData = canvas.toDataURL('image/jpeg', 0.8);
+                } catch (e) {
+                    console.error('Error converting image:', e);
+                    throw new Error('Failed to capture image');
+                }
+
+                // Show loading state
+                captureImageBtn.disabled = true;
+                captureImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+                // Send to backend for analysis
+                const response = await fetch('/process_emotion', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: imageData }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
                 if (data.error) {
-                    alert(data.error);
-                    return;
+                    throw new Error(data.error);
                 }
                 
                 // Display the detected emotion
@@ -128,30 +172,39 @@ document.addEventListener('DOMContentLoaded', function() {
                     emotionText.className = '';
                     emotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
                     
-                    // Store the captured image and emotion data in session storage
+                    // Store the captured image and emotion data
                     sessionStorage.setItem('capturedImage', imageData);
                     sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
                     
-                    // Get songs for the detected emotion
-                    const songs = getEmotionSongs(data.dominant_emotion);
+                    // Get songs from database
+                    const songs = await getEmotionSongs(data.dominant_emotion);
                     sessionStorage.setItem('recommendations', JSON.stringify(songs));
                     
-                    // Show the recommendations button
+                    // Show recommendations button
                     if (getRecommendationsBtn) {
                         getRecommendationsBtn.style.display = 'inline-flex';
-                        
-                        // Update the href to include the emotion
-                        const baseUrl = getRecommendationsBtn.getAttribute('href').split('?')[0];
-                        getRecommendationsBtn.href = `${baseUrl}?emotion=${data.dominant_emotion}`;
+                        getRecommendationsBtn.href = `/recommendations?emotion=${encodeURIComponent(data.dominant_emotion)}`;
                     }
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error processing image:', error);
-                alert('There was an error processing your image');
-            });
+                alert('Error processing image: ' + error.message);
+            } finally {
+                // Reset button state
+                if (captureImageBtn) {
+                    captureImageBtn.disabled = false;
+                    captureImageBtn.innerHTML = '<i class="fas fa-camera-retro"></i> Capture Image';
+                }
+            }
         });
     }
+
+    // Clean up when leaving the page
+    window.addEventListener('beforeunload', () => {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+    });
 
     // Upload image functionality
     const imageUpload = document.getElementById('imageUpload');
