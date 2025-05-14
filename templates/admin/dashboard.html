@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Moodify</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>Admin Panel</h2>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a></li>
+                    <li><a href="{{ url_for('admin_songs') }}">Song Management</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="admin-content">
+            <h1>Admin Dashboard</h1>
+            <p>Welcome, {{ session.name }} (Admin)</p>
+            
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p>{{ user_count }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Songs</h3>
+                    <p>{{ song_count }}</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Emotion Detections</h3>
+                    <p>{{ detection_count }}</p>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

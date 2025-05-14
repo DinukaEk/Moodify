@@ -43,12 +43,13 @@ def get_db_connection():
     
     return conn
 
+# In the init_db() function, add these new tables:
 def init_db():
     """Initialize the database tables if they don't exist"""
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Create users table
+    # Create users table (existing)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
@@ -56,11 +57,12 @@ def init_db():
         username TEXT UNIQUE NOT NULL,
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
+        is_admin BOOLEAN DEFAULT FALSE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
     
-    # Create user_history table
+    # Create user_history table (existing)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS user_history (
         id TEXT PRIMARY KEY,
@@ -69,6 +71,18 @@ def init_db():
         song_id TEXT,
         timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+    ''')
+    
+    # Create songs table (new)
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS songs (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        artist TEXT NOT NULL,
+        url TEXT NOT NULL,
+        emotion TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
     
@@ -328,9 +342,101 @@ def index():
         return redirect(url_for('welcome'))
     return redirect(url_for('login'))
 
+# Admin Routes
+@app.route('/admin')
+@login_required
+def admin_dashboard():
+    # Check if user is admin
+    if not session.get('is_admin', False):
+        flash('You do not have permission to access this page')
+        return redirect(url_for('welcome'))
+    
+    return render_template('admin/dashboard.html')
+
+@app.route('/admin/songs')
+@login_required
+def admin_songs():
+    # Check if user is admin
+    if not session.get('is_admin', False):
+        flash('You do not have permission to access this page')
+        return redirect(url_for('welcome'))
+    
+    # Get all songs grouped by emotion
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT DISTINCT emotion FROM songs ORDER BY emotion')
+    emotions = [row['emotion'] for row in cursor.fetchall()]
+    
+    songs_by_emotion = {}
+    for emotion in emotions:
+        cursor.execute('SELECT * FROM songs WHERE emotion = %s ORDER BY title', (emotion,))
+        songs_by_emotion[emotion] = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    return render_template('admin/songs.html', songs_by_emotion=songs_by_emotion)
+
+@app.route('/admin/add_song', methods=['POST'])
+@login_required
+def admin_add_song():
+    if not session.get('is_admin', False):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    
+    data = request.json
+    title = data.get('title')
+    artist = data.get('artist')
+    url = data.get('url')
+    emotion = data.get('emotion')
+    
+    if not all([title, artist, url, emotion]):
+        return jsonify({"success": False, "error": "All fields are required"}), 400
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        song_id = str(uuid.uuid4())
+        cursor.execute('''
+            INSERT INTO songs (id, title, artist, url, emotion)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (song_id, title, artist, url, emotion))
+        
+        conn.commit()
+        return jsonify({"success": True, "song_id": song_id})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/admin/delete_song/<song_id>', methods=['DELETE'])
+@login_required
+def admin_delete_song(song_id):
+    if not session.get('is_admin', False):
+        return jsonify({"success": False, "error": "Unauthorized"}), 403
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        cursor.execute('DELETE FROM songs WHERE id = %s', (song_id,))
+        conn.commit()
+        return jsonify({"success": True})
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"success": False, "error": str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if 'user_id' in session:
+        if session.get('is_admin', False):
+            return redirect(url_for('admin_dashboard'))
         return redirect(url_for('welcome'))
         
     if request.method == 'POST':
@@ -354,8 +460,11 @@ def login():
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['name'] = user['name']
+            session['is_admin'] = user['is_admin']
             
-            # Redirect to welcome page
+            # Redirect based on admin status
+            if user['is_admin']:
+                return redirect(url_for('admin_dashboard'))
             return redirect(url_for('welcome'))
         
         flash('Invalid username or password')
@@ -397,13 +506,15 @@ def signup():
             flash('Username or email already exists')
             return render_template('signup.html')
         
-        # Create new user
+        # Create new user (non-admin by default)
         user_id = str(uuid.uuid4())
         hashed_password = generate_password_hash(password)
         
         try:
-            cursor.execute('INSERT INTO users (id, name, username, email, password) VALUES (%s, %s, %s, %s, %s)',
-                       (user_id, name, username, email, hashed_password))
+            cursor.execute('''
+                INSERT INTO users (id, name, username, email, password, is_admin)
+                VALUES (%s, %s, %s, %s, %s, FALSE)
+            ''', (user_id, name, username, email, hashed_password))
             conn.commit()
             
             # Log the user in
@@ -411,6 +522,7 @@ def signup():
             session['user_id'] = user_id
             session['username'] = username
             session['name'] = name
+            session['is_admin'] = False
             
             cursor.close()
             conn.close()

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Song Management - Moodify Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="admin-container">
+        <aside class="admin-sidebar">
+            <h2>Admin Panel</h2>
+            <nav>
+                <ul>
+                    <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('admin_songs') }}" class="active">Song Management</a></li>
+                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <main class="admin-content">
+            <h1>Song Management</h1>
+            
+            <div class="song-management">
+                <!-- Add New Song Form -->
+                <div class="add-song-form">
+                    <h3>Add New Song</h3>
+                    <form id="add-song-form">
+                        <div class="form-group">
+                            <label for="emotion">Emotion</label>
+                            <select id="emotion" name="emotion" required>
+                                <option value="Angry">Angry</option>
+                                <option value="Disgust">Disgust</option>
+                                <option value="Fear">Fear</option>
+                                <option value="Happy">Happy</option>
+                                <option value="Neutral">Neutral</option>
+                                <option value="Sad">Sad</option>
+                                <option value="Surprise">Surprise</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="artist">Artist</label>
+                            <input type="text" id="artist" name="artist" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="url">URL (Spotify or YouTube)</label>
+                            <input type="url" id="url" name="url" required>
+                        </div>
+                        <button type="submit" class="btn-primary">Add Song</button>
+                    </form>
+                </div>
+                
+                <!-- Songs by Emotion -->
+                <div class="songs-by-emotion">
+                    {% for emotion, songs in songs_by_emotion.items() %}
+                    <div class="emotion-section">
+                        <h3>{{ emotion }}</h3>
+                        <div class="song-list">
+                            {% for song in songs %}
+                            <div class="song-item" data-song-id="{{ song.id }}">
+                                <div class="song-info">
+                                    <h4>{{ song.title }}</h4>
+                                    <p>{{ song.artist }}</p>
+                                    <a href="{{ song.url }}" target="_blank">{{ song.url }}</a>
+                                </div>
+                                <button class="btn-danger delete-song" data-song-id="{{ song.id }}">Delete</button>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body class="welcome-page">
+    {% if session.get('is_admin', False) %}
+        <li><a href="{{ url_for('admin_dashboard') }}">Admin Panel</a></li>
+    {% endif %}
     <!-- Fixed navigation bar -->
     <header class="main-header">
         <div class="navbar">
