@@ -116,51 +116,68 @@ def load_model():
     except Exception as e:
         print(f"Error loading model: {str(e)}")
 
-# Song recommendations for each emotion (same as in your Streamlit app)
-emotion_songs = {
-    "Angry": [
-        {"title": "Break Stuff", "artist": "Limp Bizkit", "url": "https://open.spotify.com/track/5cZqsjJuBIcjqyVaZd5Ill"},
-        {"title": "Bulls On Parade", "artist": "Rage Against The Machine", "url": "https://open.spotify.com/track/1Dj3C4NOtWo7ETBv2ThrPD"},
-        {"title": "Master Of Puppets", "artist": "Metallica", "url": "https://open.spotify.com/track/2MuWTIM3b0YEAskbeeFE1i"},
-        {"title": "Killing In The Name", "artist": "Rage Against The Machine", "url": "https://youtu.be/bWXazVhlyxQ"}
-    ],
-    "Disgust": [
-        {"title": "Creep", "artist": "Radiohead", "url": "https://open.spotify.com/track/70LcF31zb1H0PyJoS1Sx1r"},
-        {"title": "Somebody That I Used To Know", "artist": "Gotye", "url": "https://open.spotify.com/track/1qDrWA6lyx8cLECdZE7TV7"},
-        {"title": "Seven Nation Army", "artist": "The White Stripes", "url": "https://open.spotify.com/track/7i6r9KotUPQg3ozKKgEPIN"},
-        {"title": "Loser", "artist": "Beck", "url": "https://youtu.be/YgSPaXgAdzE"}
-    ],
-    "Fear": [
-        {"title": "Thriller", "artist": "Michael Jackson", "url": "https://open.spotify.com/track/2LlQb7Uoj1kKyLZnCCXvyS"},
-        {"title": "Everybody's Scared", "artist": "Lenka", "url": "https://open.spotify.com/track/0KbHuWNqhQbYQvZwzSZGTj"},
-        {"title": "Fear of the Dark", "artist": "Iron Maiden", "url": "https://open.spotify.com/track/5C4TQZWf4pTWugCrzhXl6X"},
-        {"title": "Enter Sandman", "artist": "Metallica", "url": "https://youtu.be/CD-E-LDc384"}
-    ],
-    "Happy": [
-        {"title": "Happy", "artist": "Pharrell Williams", "url": "https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCO"},
-        {"title": "Don't Stop Me Now", "artist": "Queen", "url": "https://open.spotify.com/track/5T8EDUDqKcs6OSOwEsfqG7"},
-        {"title": "Walking On Sunshine", "artist": "Katrina & The Waves", "url": "https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0"},
-        {"title": "Can't Stop The Feeling", "artist": "Justin Timberlake", "url": "https://youtu.be/ru0K8uYEZWw"}
-    ],
-    "Neutral": [
-        {"title": "Comfortably Numb", "artist": "Pink Floyd", "url": "https://open.spotify.com/track/6LbVJ5Kh8aQCnaSsNZfZXx"},
-        {"title": "Breathe", "artist": "Télépopmusik", "url": "https://open.spotify.com/track/0PG9fbaaHFHfre2gUVo7AN"},
-        {"title": "No Surprises", "artist": "Radiohead", "url": "https://open.spotify.com/track/10nyNJ6zNy2YVYLrcwLccB"},
-        {"title": "Marconi Union - Weightless", "artist": "Marconi Union", "url": "https://youtu.be/UfcAVejslrU"}
-    ],
-    "Sad": [
-        {"title": "Someone Like You", "artist": "Adele", "url": "https://open.spotify.com/track/1aFuEGnSXz33jJzLZMqk28"},
-        {"title": "Hurt", "artist": "Johnny Cash", "url": "https://open.spotify.com/track/28cnXtME493VX9NOw9cIUh"},
-        {"title": "Fix You", "artist": "Coldplay", "url": "https://open.spotify.com/track/7LVHVU3tWfcxj5aiPFEW4Q"},
-        {"title": "Mad World", "artist": "Gary Jules", "url": "https://youtu.be/4N3N1MlvVc4"}
-    ],
-    "Surprise": [
-        {"title": "Wow", "artist": "Post Malone", "url": "https://open.spotify.com/track/7fvUMiyapMsNXnM6Y9taEv"},
-        {"title": "Starboy", "artist": "The Weeknd", "url": "https://open.spotify.com/track/7MXVkk9YMctZqd1Srtv4MB"},
-        {"title": "Uprising", "artist": "Muse", "url": "https://open.spotify.com/track/4VqPOruhp5EdPBeR92t6lQ"},
-        {"title": "Radioactive", "artist": "Imagine Dragons", "url": "https://youtu.be/ktvTqknDobU"}
-    ]
-}
+# Function for get relevant songs from the database
+def get_songs_for_emotion(emotion):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    cursor.execute('SELECT * FROM songs WHERE emotion = %s', (emotion,))
+    songs = cursor.fetchall()
+    
+    cursor.close()
+    conn.close()
+    
+    # Convert to the format expected by the frontend
+    return [{
+        'title': song['title'],
+        'artist': song['artist'],
+        'url': song['url']
+    } for song in songs]
+
+# Update the process_emotion route to use database
+@app.route('/process_emotion', methods=['POST'])
+@login_required
+def process_emotion():
+    data = request.json
+    frame_data = data.get('image')
+    
+    result = process_frame(frame_data)
+    
+    # Save the emotion detection result to user history
+    if 'user_id' in session and 'dominant_emotion' in result:
+        save_user_history(session['user_id'], result['dominant_emotion'])
+    
+    # Get songs from database instead of hardcoded list
+    if 'dominant_emotion' in result:
+        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
+    
+    return jsonify(result)
+
+# Add this new route for getting songs by emotion
+@app.route('/get_songs/<emotion>')
+@login_required
+def get_songs(emotion):
+    songs = get_songs_for_emotion(emotion)
+    return jsonify(songs)
+
+# Update the process_emotion route
+@app.route('/process_emotion', methods=['POST'])
+@login_required
+def process_emotion():
+    data = request.json
+    frame_data = data.get('image')
+    
+    result = process_frame(frame_data)
+    
+    # Save the emotion detection result to user history
+    if 'user_id' in session and 'dominant_emotion' in result:
+        save_user_history(session['user_id'], result['dominant_emotion'])
+    
+    # Get songs from database
+    if 'dominant_emotion' in result:
+        result['recommendations'] = get_songs_for_emotion(result['dominant_emotion'])
+    
+    return jsonify(result)
 
 # Helper function to convert YouTube URLs to embedded format
 def get_embedded_player(url):

@@ -278,54 +278,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Define emotion songs with their recommendations - made available globally in this script
-    function getEmotionSongs(emotion) {
-        const emotionSongs = {
-            "Angry": [
-                {"title": "Break Stuff", "artist": "Limp Bizkit", "url": "https://open.spotify.com/track/5cZqsjJuBIcjqyVaZd5Ill"},
-                {"title": "Bulls On Parade", "artist": "Rage Against The Machine", "url": "https://open.spotify.com/track/1Dj3C4NOtWo7ETBv2ThrPD"},
-                {"title": "Master Of Puppets", "artist": "Metallica", "url": "https://open.spotify.com/track/2MuWTIM3b0YEAskbeeFE1i"},
-                {"title": "Killing In The Name", "artist": "Rage Against The Machine", "url": "https://youtu.be/bWXazVhlyxQ"}
-            ],
-            "Disgust": [
-                {"title": "Creep", "artist": "Radiohead", "url": "https://open.spotify.com/track/70LcF31zb1H0PyJoS1Sx1r"},
-                {"title": "Somebody That I Used To Know", "artist": "Gotye", "url": "https://open.spotify.com/track/1qDrWA6lyx8cLECdZE7TV7"},
-                {"title": "Seven Nation Army", "artist": "The White Stripes", "url": "https://open.spotify.com/track/7i6r9KotUPQg3ozKKgEPIN"},
-                {"title": "Loser", "artist": "Beck", "url": "https://youtu.be/YgSPaXgAdzE"}
-            ],
-            "Fear": [
-                {"title": "Thriller", "artist": "Michael Jackson", "url": "https://open.spotify.com/track/2LlQb7Uoj1kKyLZnCCXvyS"},
-                {"title": "Everybody's Scared", "artist": "Lenka", "url": "https://open.spotify.com/track/0KbHuWNqhQbYQvZwzSZGTj"},
-                {"title": "Fear of the Dark", "artist": "Iron Maiden", "url": "https://open.spotify.com/track/5C4TQZWf4pTWugCrzhXl6X"},
-                {"title": "Enter Sandman", "artist": "Metallica", "url": "https://youtu.be/CD-E-LDc384"}
-            ],
-            "Happy": [
-                {"title": "Happy", "artist": "Pharrell Williams", "url": "https://open.spotify.com/track/60nZcImufyMA1MKQY3dcCO"},
-                {"title": "Don't Stop Me Now", "artist": "Queen", "url": "https://open.spotify.com/track/5T8EDUDqKcs6OSOwEsfqG7"},
-                {"title": "Walking On Sunshine", "artist": "Katrina & The Waves", "url": "https://open.spotify.com/track/05wIrZSwuaVWhcv5FfqeH0"},
-                {"title": "Can't Stop The Feeling", "artist": "Justin Timberlake", "url": "https://youtu.be/ru0K8uYEZWw"}
-            ],
-            "Neutral": [
-                {"title": "Comfortably Numb", "artist": "Pink Floyd", "url": "https://open.spotify.com/track/6LbVJ5Kh8aQCnaSsNZfZXx"},
-                {"title": "Breathe", "artist": "Télépopmusik", "url": "https://open.spotify.com/track/0PG9fbaaHFHfre2gUVo7AN"},
-                {"title": "No Surprises", "artist": "Radiohead", "url": "https://open.spotify.com/track/10nyNJ6zNy2YVYLrcwLccB"},
-                {"title": "Marconi Union - Weightless", "artist": "Marconi Union", "url": "https://youtu.be/UfcAVejslrU"}
-            ],
-            "Sad": [
-                {"title": "Someone Like You", "artist": "Adele", "url": "https://open.spotify.com/track/1aFuEGnSXz33jJzLZMqk28"},
-                {"title": "Hurt", "artist": "Johnny Cash", "url": "https://open.spotify.com/track/28cnXtME493VX9NOw9cIUh"},
-                {"title": "Fix You", "artist": "Coldplay", "url": "https://open.spotify.com/track/7LVHVU3tWfcxj5aiPFEW4Q"},
-                {"title": "Mad World", "artist": "Gary Jules", "url": "https://youtu.be/4N3N1MlvVc4"}
-            ],
-            "Surprise": [
-                {"title": "Wow", "artist": "Post Malone", "url": "https://open.spotify.com/track/7fvUMiyapMsNXnM6Y9taEv"},
-                {"title": "Starboy", "artist": "The Weeknd", "url": "https://open.spotify.com/track/7MXVkk9YMctZqd1Srtv4MB"},
-                {"title": "Uprising", "artist": "Muse", "url": "https://open.spotify.com/track/4VqPOruhp5EdPBeR92t6lQ"},
-                {"title": "Radioactive", "artist": "Imagine Dragons", "url": "https://youtu.be/ktvTqknDobU"}
-            ]
-        };
-        
-        return emotionSongs[emotion] || [];
+    async function getEmotionSongs(emotion) {
+        try {
+            const response = await fetch(`/get_songs/${emotion}`);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching songs:', error);
+            return [];
+        }
     }
 
     // Select emotion functionality
@@ -336,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (emotionItems.length > 0) {
         emotionItems.forEach(item => {
-            item.addEventListener('click', function() {
+            item.addEventListener('click', async function() {
                 // Get the selected emotion
                 const emotion = this.getAttribute('data-emotion');
                 
@@ -347,8 +308,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store the selected emotion data for recommendations page
                 sessionStorage.setItem('detectedEmotion', emotion);
                 
-                // Get songs for the selected emotion
-                const songs = getEmotionSongs(emotion);
+                // Get songs for the selected emotion from database
+                const songs = await getEmotionSongs(emotion);
                 sessionStorage.setItem('recommendations', JSON.stringify(songs));
                 
                 // Show the songs section
