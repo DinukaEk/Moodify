@@ -133,7 +133,7 @@
     <section id="upload-section" class="section upload-section">
         <div class="section-container">
             <h2 class="section-title">Upload Your Photo</h2>
-            <p class="section-description">Upload a clear photo of your face for emotion detection</p>
+            <p class="section-description">Upload a photo of yourself to detect your emotion</p>
             
             <div class="upload-content">
                 <div class="upload-container">
@@ -146,20 +146,20 @@
                     
                     <div class="preview-container" id="previewContainer" style="display: none;">
                         <img id="imagePreview" src="#" alt="Preview">
-                        <button id="analyzeImage" class="action-button">
-                            <i class="fas fa-search"></i> Analyze Emotion
+                        <button id="detectEmotionBtn" class="action-button" style="display: none;">
+                            <i class="fas fa-search"></i> Detect Emotion
                         </button>
                     </div>
                 </div>
                 
                 <div class="upload-emotion-result">
-                    <div class="emotion-placeholder">
+                    <div class="emotion-placeholder" id="uploadEmotionPlaceholder">
                         <i class="fas fa-dizzy"></i>
                         <p>Your detected emotion will appear here</p>
                     </div>
                     <div id="uploadDetectedEmotion" style="display: none;">
                         <h3>Detected Emotion: <span id="uploadEmotionText"></span></h3>
-                        <a href="{{ url_for('recommendations') }}" id="uploadGetRecommendations" class="action-button continue-button" style="display: none;">
+                        <a href="{{ url_for('recommendations') }}" id="uploadGetRecommendations" class="action-button continue-button">
                             <i class="fas fa-music"></i> Get Music Recommendations
                         </a>
                     </div>
@@ -168,7 +168,7 @@
             
             <div class="section-tip">
                 <i class="fas fa-lightbulb"></i>
-                <p>For best results, use a clear frontal photo with good lighting</p>
+                <p>Upload a clear photo of your face for the most accurate results</p>
             </div>
         </div>
     </section>

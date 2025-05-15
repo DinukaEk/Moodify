@@ -211,16 +211,56 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadArea = document.getElementById('uploadArea');
     const previewContainer = document.getElementById('previewContainer');
     const imagePreview = document.getElementById('imagePreview');
-    const analyzeImageBtn = document.getElementById('analyzeImage');
+    const detectEmotionBtn = document.getElementById('detectEmotionBtn');
+    const uploadEmotionPlaceholder = document.getElementById('uploadEmotionPlaceholder');
     const uploadDetectedEmotion = document.getElementById('uploadDetectedEmotion');
     const uploadEmotionText = document.getElementById('uploadEmotionText');
     const uploadGetRecommendationsBtn = document.getElementById('uploadGetRecommendations');
 
+    // Handle file selection
+    imageUpload.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            
+            // Validate file type
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file (JPEG, PNG, etc.)');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Display the selected image
+                imagePreview.src = e.target.result;
+                uploadArea.style.display = 'none';
+                previewContainer.style.display = 'block';
+                
+                // Show the detect emotion button
+                detectEmotionBtn.style.display = 'inline-flex';
+                
+                // Reset any previous results
+                uploadEmotionPlaceholder.style.display = 'block';
+                uploadDetectedEmotion.style.display = 'none';
+            };
+            
+            reader.onerror = function() {
+                alert('Error reading file. Please try another image.');
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    });
+
     // Handle drag and drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
         uploadArea.addEventListener(eventName, preventDefaults, false);
-        document.body.addEventListener(eventName, preventDefaults, false);
     });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
 
     ['dragenter', 'dragover'].forEach(eventName => {
         uploadArea.addEventListener(eventName, highlight, false);
@@ -230,11 +270,6 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadArea.addEventListener(eventName, unhighlight, false);
     });
 
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
     function highlight() {
         uploadArea.classList.add('highlight');
     }
@@ -243,107 +278,87 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadArea.classList.remove('highlight');
     }
 
-    // Handle dropped files
-    uploadArea.addEventListener('drop', handleDrop, false);
-
-    function handleDrop(e) {
+    uploadArea.addEventListener('drop', function(e) {
         const dt = e.dataTransfer;
         const files = dt.files;
-        handleFiles(files);
-    }
-
-    // Handle selected files
-    imageUpload.addEventListener('change', function() {
-        if (this.files && this.files.length > 0) {
-            handleFiles(this.files);
+        
+        if (files.length > 0) {
+            imageUpload.files = files;
+            const event = new Event('change');
+            imageUpload.dispatchEvent(event);
         }
     });
 
-    function handleFiles(files) {
-        const file = files[0];
-        
-        // Validate file type
-        if (!file.type.match('image.*')) {
-            alert('Please select an image file (JPEG, PNG, etc.)');
+    // Detect emotion from uploaded image
+    detectEmotionBtn.addEventListener('click', async function() {
+        if (!imagePreview.src || imagePreview.src === '#') {
+            alert('Please upload an image first');
             return;
         }
-        
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            imagePreview.src = e.target.result;
-            uploadArea.style.display = 'none';
-            previewContainer.style.display = 'block';
-        };
-        
-        reader.onerror = function() {
-            alert('Error reading file. Please try another image.');
-        };
-        
-        reader.readAsDataURL(file);
-    }
 
-    // Analyze the uploaded image
-    if (analyzeImageBtn && imagePreview) {
-        analyzeImageBtn.addEventListener('click', async function() {
-            if (!imagePreview.src || imagePreview.src.startsWith('data:')) {
-                try {
-                    analyzeImageBtn.disabled = true;
-                    analyzeImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyzing...';
-                    
-                    // Process the image
-                    const response = await fetch('/process_emotion', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ 
-                            image: imagePreview.src 
-                        }),
-                    });
+        try {
+            // Show loading state
+            detectEmotionBtn.disabled = true;
+            detectEmotionBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            
+            // Hide placeholder and previous results
+            uploadEmotionPlaceholder.style.display = 'none';
+            uploadDetectedEmotion.style.display = 'none';
+            
+            // Send image to server for processing
+            const response = await fetch('/process_emotion', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    image: imagePreview.src 
+                }),
+            });
 
-                    if (!response.ok) {
-                        throw new Error(`Server error: ${response.status}`);
-                    }
-
-                    const data = await response.json();
-
-                    if (data.error) {
-                        throw new Error(data.error);
-                    }
-                    
-                    // Display results
-                    if (uploadDetectedEmotion) {
-                        uploadDetectedEmotion.style.display = 'block';
-                        uploadEmotionText.textContent = data.dominant_emotion;
-                        
-                        // Apply emotion styling
-                        uploadEmotionText.className = '';
-                        uploadEmotionText.classList.add(`emotion-text-${data.dominant_emotion.toLowerCase()}`);
-                        
-                        // Store data for recommendations page
-                        sessionStorage.setItem('capturedImage', imagePreview.src);
-                        sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
-                        sessionStorage.setItem('recommendations', JSON.stringify(data.recommendations));
-                        
-                        // Show recommendations button
-                        if (uploadGetRecommendationsBtn) {
-                            uploadGetRecommendationsBtn.style.display = 'inline-flex';
-                            uploadGetRecommendationsBtn.href = `/recommendations?emotion=${encodeURIComponent(data.dominant_emotion)}`;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error processing image:', error);
-                    alert('Error processing image: ' + error.message);
-                } finally {
-                    analyzeImageBtn.disabled = false;
-                    analyzeImageBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Emotion';
-                }
-            } else {
-                alert('Please upload an image first');
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
             }
-        });
-    }
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error);
+            }
+            
+            // Display the detected emotion
+            uploadEmotionText.textContent = data.dominant_emotion;
+            
+            // Apply emotion specific styling
+            uploadEmotionText.className = '';
+            uploadEmotionText.classList.add(`emotion-${data.dominant_emotion.toLowerCase()}`);
+            
+            // Show results section
+            uploadDetectedEmotion.style.display = 'block';
+            
+            // Store data for recommendations page
+            sessionStorage.setItem('capturedImage', imagePreview.src);
+            sessionStorage.setItem('detectedEmotion', data.dominant_emotion);
+            sessionStorage.setItem('recommendations', JSON.stringify(data.recommendations));
+            
+            // Update recommendations button link
+            uploadGetRecommendationsBtn.href = `/recommendations?emotion=${encodeURIComponent(data.dominant_emotion)}`;
+            
+        } catch (error) {
+            console.error('Error processing image:', error);
+            
+            // Show error message
+            uploadEmotionPlaceholder.innerHTML = `
+                <i class="fas fa-exclamation-circle" style="color: var(--danger-color);"></i>
+                <p>${error.message || 'Error processing image'}</p>
+            `;
+            uploadEmotionPlaceholder.style.display = 'block';
+        } finally {
+            // Reset button state
+            detectEmotionBtn.disabled = false;
+            detectEmotionBtn.innerHTML = '<i class="fas fa-search"></i> Detect Emotion';
+        }
+    });
 
     async function getEmotionSongs(emotion) {
         try {
