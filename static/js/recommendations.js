@@ -81,8 +81,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!songs || songs.length === 0) {
             songsContainer.innerHTML = `
                 <div class="loading-songs">
-                    <i class="fas fa-music" style="color: var(--gray-color);"></i>
+                    <i class="fas fa-music"></i>
                     <p>No recommendations available for this emotion.</p>
+                    <a href="{{ url_for('detect') }}" class="action-button">
+                        <i class="fas fa-redo"></i> Try Again
+                    </a>
                 </div>
             `;
             return;
@@ -111,9 +114,13 @@ document.addEventListener('DOMContentLoaded', function() {
             // Add event listener for playing the song
             songCard.querySelector('.play-button').addEventListener('click', () => {
                 playMusic(song);
-                
-                // Save song selection to user history if logged in
                 saveSongSelection(detectedEmotion, song.url);
+                
+                // Highlight the playing song
+                document.querySelectorAll('.song-card').forEach(card => {
+                    card.classList.remove('playing');
+                });
+                songCard.classList.add('playing');
             });
             
             songsContainer.appendChild(songCard);
