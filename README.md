@@ -61,6 +61,7 @@ Automatically generate personalized music playlists based on your current mood. 
 
 ## 📂 Project Structure
 
+```
 Moodify/
 ├── server.py # Flask server and routing
 ├── model.py # DB models
@@ -70,6 +71,7 @@ Moodify/
 ├── requirements.txt # Python dependencies
 ├── static/ # CSS, JS, images
 └── templates/ # HTML Jinja templates
+```
 
 
 ## ✅ Usage
