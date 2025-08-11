@@ -6,39 +6,273 @@
     <title>Admin Dashboard - Moodify</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
     <div class="admin-container">
         <aside class="admin-sidebar">
-            <h2>Admin Panel</h2>
+            <div class="admin-logo">
+                <div class="logo-container">
+                    <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
+                </div>
+                <h2>Moodify Admin</h2>
+            </div>
             <nav>
                 <ul>
-                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">Dashboard</a></li>
-                    <li><a href="{{ url_for('admin_songs') }}">Song Management</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('admin_dashboard') }}" class="active">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a></li>
+                    <li><a href="{{ url_for('admin_songs') }}">
+                        <i class="fas fa-music"></i> Song Management
+                    </a></li>
+                    <li><a href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a></li>
                 </ul>
             </nav>
         </aside>
         
         <main class="admin-content">
-            <h1>Admin Dashboard</h1>
-            <p>Welcome, {{ session.name }} (Admin)</p>
+            <div class="dashboard-header">
+                <h1><i class="fas fa-chart-pie"></i> Analytics Dashboard</h1>
+                <div class="welcome-card">
+                    <p>Welcome back, <strong>{{ session.name }}</strong></p>
+                    <span class="admin-badge">Administrator</span>
+                </div>
+            </div>
             
-            <div class="admin-stats">
-                <div class="stat-card">
-                    <h3>Total Users</h3>
-                    <p>{{ user_count }}</p>
+            <!-- Key Metrics Cards -->
+            <div class="metrics-grid">
+                <div class="metric-card users">
+                    <div class="metric-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Total Users</h3>
+                        <p class="metric-number" id="total-users">{{ user_count or 0 }}</p>
+                        <span class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i> +12% this month
+                        </span>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Total Songs</h3>
-                    <p>{{ song_count }}</p>
+                
+                <div class="metric-card songs">
+                    <div class="metric-icon">
+                        <i class="fas fa-music"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Total Songs</h3>
+                        <p class="metric-number" id="total-songs">{{ song_count or 0 }}</p>
+                        <span class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i> +8% this week
+                        </span>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <h3>Emotion Detections</h3>
-                    <p>{{ detection_count }}</p>
+                
+                <div class="metric-card detections">
+                    <div class="metric-icon">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Emotion Detections</h3>
+                        <p class="metric-number" id="total-detections">{{ detection_count or 0 }}</p>
+                        <span class="metric-change positive">
+                            <i class="fas fa-arrow-up"></i> +25% today
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="metric-card active-sessions">
+                    <div class="metric-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h3>Active Sessions</h3>
+                        <p class="metric-number" id="active-sessions">{{ active_sessions or 0 }}</p>
+                        <span class="metric-change neutral">
+                            <i class="fas fa-minus"></i> Live data
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-bar"></i> Emotion Distribution</h3>
+                        <div class="chart-controls">
+                            <select id="emotion-period">
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                                <option value="90">Last 90 days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-container">
+                        <canvas id="emotionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> User Activity</h3>
+                        <div class="chart-controls">
+                            <select id="activity-period">
+                                <option value="7">Last 7 days</option>
+                                <option value="30">Last 30 days</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-canvas-container">
+                        <canvas id="activityChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Stats Section -->
+            <div class="stats-section">
+                <div class="stats-card">
+                    <h3><i class="fas fa-globe"></i> Language Preferences</h3>
+                    <div class="language-stats">
+                        <div class="language-item">
+                            <span class="language-name">English</span>
+                            <div class="language-bar">
+                                <div class="language-progress" style="width: 65%"></div>
+                            </div>
+                            <span class="language-percent">65%</span>
+                        </div>
+                        <div class="language-item">
+                            <span class="language-name">Spanish</span>
+                            <div class="language-bar">
+                                <div class="language-progress" style="width: 20%"></div>
+                            </div>
+                            <span class="language-percent">20%</span>
+                        </div>
+                        <div class="language-item">
+                            <span class="language-name">French</span>
+                            <div class="language-bar">
+                                <div class="language-progress" style="width: 10%"></div>
+                            </div>
+                            <span class="language-percent">10%</span>
+                        </div>
+                        <div class="language-item">
+                            <span class="language-name">Other</span>
+                            <div class="language-bar">
+                                <div class="language-progress" style="width: 5%"></div>
+                            </div>
+                            <span class="language-percent">5%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                    <div class="activity-feed">
+                        <div class="activity-item">
+                            <div class="activity-icon happy">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>Happy emotion detected</p>
+                                <span class="activity-time">2 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon user">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>New user registered</p>
+                                <span class="activity-time">5 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon sad">
+                                <i class="fas fa-frown"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>Sad emotion detected</p>
+                                <span class="activity-time">8 minutes ago</span>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon song">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <div class="activity-content">
+                                <p>New song added to library</p>
+                                <span class="activity-time">12 minutes ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stats-card">
+                    <h3><i class="fas fa-trophy"></i> Top Emotions</h3>
+                    <div class="top-emotions">
+                        <div class="emotion-rank">
+                            <span class="rank-number">1</span>
+                            <div class="emotion-info">
+                                <span class="emotion-name">Happy</span>
+                                <span class="emotion-count">1,245 detections</span>
+                            </div>
+                        </div>
+                        <div class="emotion-rank">
+                            <span class="rank-number">2</span>
+                            <div class="emotion-info">
+                                <span class="emotion-name">Neutral</span>
+                                <span class="emotion-count">987 detections</span>
+                            </div>
+                        </div>
+                        <div class="emotion-rank">
+                            <span class="rank-number">3</span>
+                            <div class="emotion-info">
+                                <span class="emotion-name">Sad</span>
+                                <span class="emotion-count">756 detections</span>
+                            </div>
+                        </div>
+                        <div class="emotion-rank">
+                            <span class="rank-number">4</span>
+                            <div class="emotion-info">
+                                <span class="emotion-name">Surprise</span>
+                                <span class="emotion-count">432 detections</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- System Status -->
+            <div class="system-status">
+                <h3><i class="fas fa-server"></i> System Status</h3>
+                <div class="status-grid">
+                    <div class="status-item">
+                        <span class="status-label">Database</span>
+                        <span class="status-indicator online"></span>
+                        <span class="status-text">Online</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">AI Model</span>
+                        <span class="status-indicator online"></span>
+                        <span class="status-text">Loaded</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Mail Service</span>
+                        <span class="status-indicator online"></span>
+                        <span class="status-text">Active</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Storage</span>
+                        <span class="status-indicator warning"></span>
+                        <span class="status-text">78% Used</span>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
+    
+    <script src="{{ url_for('static', filename='js/admin-dashboard.js') }}"></script>
 </body>
 </html>

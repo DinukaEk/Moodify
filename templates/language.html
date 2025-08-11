@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify - Language Selection</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/language.css') }}">
+</head>
+<body>
+    <div class="language-container">
+        <div class="logo-container">
+            <div class="logo-text">Moodify</div>
+        </div>
+        
+        <h1 class="welcome-text">Welcome, {{ session.get('name', 'User') }}!</h1>
+        <p class="subtitle">Choose your preferred music languages to get personalized recommendations based on your emotions.</p>
+        
+        <div class="signup-note">
+            <i class="fas fa-check-circle"></i>
+            Account created successfully! Please select your music preferences to complete your setup.
+        </div>
+        
+        <div class="selection-info">
+            <i class="fas fa-info-circle"></i>
+            You can select multiple languages. Your music recommendations will be filtered based on your preferences.
+        </div>
+        
+        <div class="error-message" id="errorMessage">
+            Please select at least one language to continue.
+        </div>
+        
+        <div class="language-grid">
+            <div class="language-item" data-language="English">
+                <div class="language-flag">🇺🇸</div>
+                <div class="language-name">English</div>
+                <div class="language-description">International hits & classics</div>
+            </div>
+            
+            <div class="language-item" data-language="Sinhala">
+                <div class="language-flag">🇱🇰</div>
+                <div class="language-name">Sinhala</div>
+                <div class="language-description">Sri Lankan music</div>
+            </div>
+            
+            <div class="language-item" data-language="Tamil">
+                <div class="language-flag">🇮🇳</div>
+                <div class="language-name">Tamil</div>
+                <div class="language-description">Tamil songs & melodies</div>
+            </div>
+            
+            <div class="language-item" data-language="Korean">
+                <div class="language-flag">🇰🇷</div>
+                <div class="language-name">Korean</div>
+                <div class="language-description">K-Pop & Korean music</div>
+            </div>
+            
+            <div class="language-item" data-language="Other">
+                <div class="language-flag">🌍</div>
+                <div class="language-name">Other</div>
+                <div class="language-description">World music varieties</div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner"></div>
+            <span>Saving your preferences...</span>
+        </div>
+        
+        <button class="continue-button" id="continueButton">
+            <i class="fas fa-arrow-right"></i> Continue to Moodify
+        </button>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/language.js') }}"></script>
+</body>
+</html>

@@ -15,14 +15,18 @@
     <header class="main-header">
         <div class="navbar">
             <div class="logo-nav">
-                <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="nav-logo">
+                <a href="#hero-section">
+                    <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="nav-logo">
+                </a>
             </div>
             
             <nav class="main-nav">
                 <ul class="nav-links">
+                    <li><a href="#home-section" class="nav-link">Home</a></li>
                     <li><a href="#detect-section" class="nav-link">Detect Emotion</a></li>
                     <li><a href="#upload-section" class="nav-link">Upload Image</a></li>
                     <li><a href="#select-section" class="nav-link">Select Emotion</a></li>
+                    <li><a href="#music-therapy-section" class="nav-link">Music Therapy</a></li>
                 </ul>
             </nav>
             
@@ -48,14 +52,14 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="hero-section">
+    <section id="hero-section" class="hero-section">
         <div class="hero-content">
             <div class="logo-container">
                 <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="logo">
             </div>
             
             <h1>Welcome to Moodify</h1>
-            <p class="tagline">Discover music that matches your mood</p>
+            <p class="tagline">Discover your next favorite tune <br/>and let your emotions lead the way...</p>
             
             <div class="feature-cards">
                 <div class="feature-card">
@@ -83,144 +87,27 @@
         </div>
     </section>
 
-    <!-- Detect Emotion Section -->
-    <section id="detect-section" class="section detect-section">
+    <!-- Music Therapy Section -->
+    <section id="music-therapy-section" class="section music-therapy-section">
         <div class="section-container">
-            <h2 class="section-title">Detect Your Emotion</h2>
-            <p class="section-description">Our AI will analyze your facial expression through your webcam</p>
-            
-            <div class="detect-content">
-                <div class="camera-container">
-                    <div class="video-container">
-                        <img src="{{ url_for('static', filename='images/camera-placeholder.jpg') }}" alt="Camera" class="camera-placeholder">
-                        <video id="video" autoplay></video>
-                    </div>
-                    
-                    <div class="camera-controls">
-                        <button id="startCamera" class="action-button">
-                            <i class="fas fa-camera"></i> Start Camera
-                        </button>
-                        <button id="captureImage" class="action-button" disabled>
-                            <i class="fas fa-camera-retro"></i> Capture Image
-                        </button>
+            <div class="music-therapy-content">
+                <div class="music-therapy-text">
+                    <h2 class="therapy-title">Come and Relax, 
+                        <span class="highlight-text">rewind your memories</span>
+                    </h2>
+                    <div class="therapy-description">
+                        <p>Music therapy is a powerful, evidence-based practice that uses music, sound, and rhythm to promote healing and improve well-being. It has been shown to reduce anxiety by 65%, enhance mood in dementia patients by 59%, and increase motor function in stroke survivors by 57%. Music therapy also aids in pain management, reducing pain during surgeries by 46% and increasing pain tolerance by 22%. It improves social interaction in children with disabilities by 38% and boosts self-esteem in pregnant women by 25%. For physical health, it lowers heart rates in critical-care patients and preterm infants by an average of 6–7 beats per minute, while also improving sleep quality for insomnia patients by 41%. With over 5,000 board-certified music therapists in the U.S., this growing field continues to provide significant benefits to individuals across various health conditions.</p>
                     </div>
                 </div>
-                
-                <div class="emotion-result">
-                    <div class="emotion-placeholder">
-                        <i class="fas fa-dizzy"></i>
-                        <p>Your detected emotion will appear here</p>
-                    </div>
-                    <div id="detectedEmotion" style="display: none;">
-                        <h3>Detected Emotion: <span id="emotionText"></span></h3>
-                        <div id="emotionConfidence"></div>
-                        
-                        <a href="{{ url_for('recommendations') }}" id="getRecommendations" class="action-button continue-button" style="display: none;">
-                            <i class="fas fa-music"></i> Get Music Recommendations
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section-tip">
-                <i class="fas fa-lightbulb"></i>
-                <p>Make sure you're in a well-lit environment for better emotion detection</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Upload Image Section -->
-    <section id="upload-section" class="section upload-section">
-        <div class="section-container">
-            <h2 class="section-title">Upload Your Photo</h2>
-            <p class="section-description">Upload a photo of yourself to detect your emotion</p>
-            
-            <div class="upload-content">
-                <div class="upload-container">
-                    <div class="upload-area" id="uploadArea">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Drag & drop your image here or</p>
-                        <label for="imageUpload" class="upload-button">Choose File</label>
-                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
-                    </div>
-                    
-                    <div class="preview-container" id="previewContainer" style="display: none;">
-                        <img id="imagePreview" src="#" alt="Preview">
-                        <button id="detectEmotionBtn" class="action-button" style="display: none;">
-                            <i class="fas fa-search"></i> Detect Emotion
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="upload-emotion-result">
-                    <div class="emotion-placeholder" id="uploadEmotionPlaceholder">
-                        <i class="fas fa-dizzy"></i>
-                        <p>Your detected emotion will appear here</p>
-                    </div>
-                    <div id="uploadDetectedEmotion" style="display: none;">
-                        <h3>Detected Emotion: <span id="uploadEmotionText"></span></h3>
-                        <a href="{{ url_for('recommendations') }}" id="uploadGetRecommendations" class="action-button continue-button">
-                            <i class="fas fa-music"></i> Get Music Recommendations
-                        </a>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="section-tip">
-                <i class="fas fa-lightbulb"></i>
-                <p>Upload a clear photo of your face for the most accurate results</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Select Emotion Section -->
-    <section id="select-section" class="section select-section">
-        <div class="section-container">
-            <h2 class="section-title">Select Your Emotion</h2>
-            <p class="section-description">Choose how you're feeling right now to get personalized music recommendations</p>
-            
-            <div class="emotion-grid">
-                <div class="emotion-item" data-emotion="Happy">
-                    <div class="emotion-icon">😊</div>
-                    <p>Happy</p>
-                </div>
-                <div class="emotion-item" data-emotion="Sad">
-                    <div class="emotion-icon">😢</div>
-                    <p>Sad</p>
-                </div>
-                <div class="emotion-item" data-emotion="Angry">
-                    <div class="emotion-icon">😠</div>
-                    <p>Angry</p>
-                </div>
-                <div class="emotion-item" data-emotion="Surprise">
-                    <div class="emotion-icon">😲</div>
-                    <p>Surprise</p>
-                </div>
-                <div class="emotion-item" data-emotion="Fear">
-                    <div class="emotion-icon">😨</div>
-                    <p>Fear</p>
-                </div>
-                <div class="emotion-item" data-emotion="Disgust">
-                    <div class="emotion-icon">🤢</div>
-                    <p>Disgust</p>
-                </div>
-                <div class="emotion-item" data-emotion="Neutral">
-                    <div class="emotion-icon">😐</div>
-                    <p>Neutral</p>
-                </div>
-            </div>
-            
-            <div id="selectedEmotionSongs" class="songs-container" style="display: none;">
-                <h3>Music for your <span id="selectedEmotionText"></span> mood</h3>
-                <div id="songsList" class="songs-grid">
-                    <!-- Songs will be populated here via JavaScript -->
+                <div class="music-therapy-image">
+                    <img src="{{ url_for('static', filename='images/music-therapy-woman.png') }}" alt="Woman enjoying music therapy" class="therapy-image">
                 </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works Section -->
-    <section class="section how-it-works-section">
+    <section id="home-section" class="section how-it-works-section">
         <div class="section-container">
             <h2 class="section-title">How It Works</h2>
             
@@ -260,6 +147,189 @@
         </div>
     </section>
 
+    <!-- Detect Emotion Section -->
+    <section id="detect-section" class="section detect-section">
+        <div class="section-container">
+            <h4 class="section-option">Option 1:</h4>
+            <h2 class="section-title">Detect Your Emotion</h2>
+            <p class="section-description">Our AI will analyze your facial expression through your webcam</p>
+            
+            <div class="detect-content">
+                <div class="camera-container">
+                    <div class="video-container">
+                        <img src="{{ url_for('static', filename='images/camera-placeholder.jpg') }}" alt="Camera" class="camera-placeholder">
+                        <video id="video" autoplay></video>
+                    </div>
+                    
+                    <div class="camera-controls">
+                        <button id="startCamera" class="action-button">
+                            <i class="fas fa-camera"></i> Start Camera
+                        </button>
+                        <button id="captureImage" class="action-button" disabled>
+                            <i class="fas fa-camera-retro"></i> Capture Image
+                        </button>
+                        <button id="tryAgainCamera" class="action-button try-again-button" style="display: none;">
+                            <i class="fas fa-redo"></i> Try Again
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="emotion-result">
+                    <div class="emotion-placeholder">
+                        <i class="fas fa-dizzy"></i>
+                        <p>Your detected emotion will appear here</p>
+                    </div>
+                    <div id="detectedEmotion" style="display: none;">
+                        <h3>Detected Emotion: <span id="emotionText"></span></h3>
+                        <div id="emotionConfidence"></div>
+                        
+                        <a href="{{ url_for('recommendations') }}" id="getRecommendations" class="action-button continue-button" style="display: none;">
+                            <i class="fas fa-music"></i> Get Music Recommendations
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-tip">
+                <i class="fas fa-lightbulb"></i>
+                <p>Make sure you're in a well-lit environment for better emotion detection</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Image Section -->
+    <section id="upload-section" class="section upload-section">
+        <div class="section-container">
+            <h4 class="section-option">Option 2:</h4>
+            <h2 class="section-title">Upload Your Photo</h2>
+            <p class="section-description">Upload a photo of yourself to detect your emotion</p>
+            
+            <div class="upload-content">
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drag & drop your image here or</p>
+                        <label for="imageUpload" class="upload-button">Choose File</label>
+                        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <div class="preview-container" id="previewContainer" style="display: none;">
+                        <img id="imagePreview" src="#" alt="Preview">
+                        <div class="upload-controls">
+                            <button id="detectEmotionBtn" class="action-button" style="display: none;">
+                                <i class="fas fa-search"></i> Detect Emotion
+                            </button>
+                            <button id="tryAgainUpload" class="action-button try-again-button" style="display: none;">
+                                <i class="fas fa-redo"></i> Try Again
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="upload-emotion-result">
+                    <div class="emotion-placeholder" id="uploadEmotionPlaceholder">
+                        <i class="fas fa-dizzy"></i>
+                        <p>Your detected emotion will appear here</p>
+                    </div>
+                    <div id="uploadDetectedEmotion" style="display: none;">
+                        <h3>Detected Emotion: <span id="uploadEmotionText"></span></h3>
+                        <a href="{{ url_for('recommendations') }}" id="uploadGetRecommendations" class="action-button continue-button">
+                            <i class="fas fa-music"></i> Get Music Recommendations
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-tip">
+                <i class="fas fa-lightbulb"></i>
+                <p>Upload a clear photo of your face for the most accurate results</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Select Emotion Section -->
+    <section id="select-section" class="section select-section">
+        <div class="section-container">
+            <h4 class="section-option">Option 3:</h4>
+            <h2 class="section-title">Select Your Emotion</h2>
+            <p class="section-description">Choose how you're feeling right now to get personalized music recommendations</p>
+            
+            <div class="emotion-grid">
+                <div class="emotion-item" data-emotion="Happy">
+                    <div class="emotion-icon">😊</div>
+                    <p>Happy</p>
+                </div>
+                <div class="emotion-item" data-emotion="Sad">
+                    <div class="emotion-icon">😢</div>
+                    <p>Sad</p>
+                </div>
+                <div class="emotion-item" data-emotion="Angry">
+                    <div class="emotion-icon">😠</div>
+                    <p>Angry</p>
+                </div>
+                <div class="emotion-item" data-emotion="Surprise">
+                    <div class="emotion-icon">😲</div>
+                    <p>Surprise</p>
+                </div>
+                <div class="emotion-item" data-emotion="Fear">
+                    <div class="emotion-icon">😨</div>
+                    <p>Fear</p>
+                </div>
+                <div class="emotion-item" data-emotion="Disgust">
+                    <div class="emotion-icon">🤢</div>
+                    <p>Disgust</p>
+                </div>
+                <div class="emotion-item" data-emotion="Neutral">
+                    <div class="emotion-icon">😐</div>
+                    <p>Neutral</p>
+                </div>
+                <div class="emotion-item more-emotions" data-emotion="More">
+                    <span class="emotion-icon">➕</span>
+                    <p>Select More</p>
+                </div>
+            </div>
+            <h2 class="section-title" id="more-emotions-title" style="display: none;">Select Your Current Situation</h2>
+            <div class="more-emotions-grid" style="display: none;">
+                <div class="emotion-item" data-emotion="Pregnant">
+                    <span class="emotion-icon">🤰</span>
+                    <p>Pregnant</p>
+                </div>
+                <div class="emotion-item" data-emotion="Depression">
+                    <span class="emotion-icon">😔</span>
+                    <p>Depression</p>
+                </div>
+                <div class="emotion-item" data-emotion="Trouble Sleeping">
+                    <span class="emotion-icon">😴</span>
+                    <p>Trouble Sleeping</p>
+                </div>
+                <div class="emotion-item" data-emotion="Travelling">
+                    <span class="emotion-icon">✈️</span>
+                    <p>Travelling</p>
+                </div>
+                <div class="emotion-item" data-emotion="Stressed">
+                    <span class="emotion-icon">😓</span>
+                    <p>Stressed</p>
+                </div>
+                <div class="emotion-item" data-emotion="Lonely">
+                    <span class="emotion-icon">😞</span>
+                    <p>Lonely</p>
+                </div>
+                <div class="emotion-item" data-emotion="Excited">
+                    <span class="emotion-icon">🎉</span>
+                    <p>Excited</p>
+                </div>
+            </div>
+            
+            <div id="selectedEmotionSongs" class="songs-container" style="display: none;">
+                <h3>Music for your <span id="selectedEmotionText"></span> mood</h3>
+                <div id="songsList" class="songs-grid">
+                    <!-- Songs will be populated here via JavaScript -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
     <footer class="main-footer">
         <p>© 2025 Moodify - Your Emotion-Based Music Recommender</p>
     </footer>

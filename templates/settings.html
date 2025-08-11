@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moodify - Settings</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/settings.css') }}">
+</head>
+<body class="settings-page">
+    <!-- Fixed navigation bar -->
+    <header class="main-header">
+        <div class="navbar">
+            <div class="logo-nav">
+                <a href="{{ url_for('welcome') }}">
+                    <img src="{{ url_for('static', filename='images/LogoFypS-01.png') }}" alt="Moodify Logo" class="nav-logo">
+                </a>
+            </div>
+            
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="{{ url_for('welcome') }}" class="nav-link">Home</a></li>
+                    <li><a href="{{ url_for('welcome') }}#detect-section" class="nav-link">Detect Emotion</a></li>
+                    <li><a href="{{ url_for('welcome') }}#upload-section" class="nav-link">Upload Image</a></li>
+                    <li><a href="{{ url_for('welcome') }}#select-section" class="nav-link">Select Emotion</a></li>
+                </ul>
+            </nav>
+            
+            <!-- User profile in the navbar -->
+            <div class="user-profile-nav">
+                <div class="user-info" id="userInfo">
+                    <span class="user-name">{{ session.get('name', 'User') }}</span>
+                    <div class="user-avatar">
+                        <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User Avatar">
+                    </div>
+                    <!-- Dropdown menu -->
+                    <div class="user-dropdown" id="userDropdown">
+                        <ul>
+                            <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                            <li><a href="{{ url_for('settings') }}" class="active"><i class="fas fa-cog"></i> Settings</a></li>
+                            <li class="dropdown-divider"></li>
+                            <li><a href="{{ url_for('logout') }}" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="settings-container">
+        <div class="settings-header">
+            <div class="breadcrumb">
+                <a href="{{ url_for('welcome') }}">Home</a>
+                <i class="fas fa-chevron-right"></i>
+                <span>Settings</span>
+            </div>
+            <h1>Account Settings</h1>
+        </div>
+
+        <div class="settings-content">
+            <!-- Profile Settings Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-user-edit"></i> Profile Information</h2>
+                    <p>Update your personal information</p>
+                </div>
+                
+                <form id="profileForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="fullName">
+                            <i class="fas fa-user"></i> Full Name
+                        </label>
+                        <input type="text" id="fullName" name="fullName" value="{{ user.name if user else session.get('name', '') }}" required>
+                        <span class="field-hint">This will be displayed in your profile</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">
+                            <i class="fas fa-envelope"></i> Email Address
+                        </label>
+                        <input type="email" id="email" name="email" value="{{ user.email if user else session.get('email', '') }}" required>
+                        <span class="field-hint">We'll send updates to this email</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="save-btn">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                        <button type="button" class="cancel-btn" id="cancelProfileChanges">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Password Settings Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-lock"></i> Change Password</h2>
+                    <p>Update your account password</p>
+                </div>
+                
+                <form id="passwordForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="currentPassword">
+                            <i class="fas fa-lock"></i> Current Password
+                        </label>
+                        <div class="password-input-container">
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                            <button type="button" class="toggle-password" data-target="currentPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span class="field-hint">Enter your current password to confirm changes</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword">
+                            <i class="fas fa-key"></i> New Password
+                        </label>
+                        <div class="password-input-container">
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <button type="button" class="toggle-password" data-target="newPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-meter">
+                                <div class="strength-fill"></div>
+                            </div>
+                            <span class="strength-text">Password strength</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">
+                            <i class="fas fa-check-circle"></i> Confirm New Password
+                        </label>
+                        <div class="password-input-container">
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <button type="button" class="toggle-password" data-target="confirmPassword">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        <span class="field-hint">Re-enter your new password</span>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="save-btn">
+                            <i class="fas fa-shield-alt"></i> Update Password
+                        </button>
+                        <button type="button" class="cancel-btn" id="cancelPasswordChanges">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Language Preferences Section -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-language"></i> Music Language Preferences</h2>
+                    <p>Choose your preferred music languages for recommendations</p>
+                </div>
+                
+                <form id="languageForm" class="settings-form">
+                    <div class="language-selection">
+                        <div class="selection-info">
+                            <i class="fas fa-info-circle"></i>
+                            Select multiple languages to get diverse music recommendations
+                        </div>
+                        
+                        <div class="language-grid">
+                            <div class="language-option" data-language="English">
+                                <input type="checkbox" id="lang-english" name="languages" value="English">
+                                <label for="lang-english">
+                                    <div class="language-flag">🇺🇸</div>
+                                    <div class="language-info">
+                                        <span class="language-name">English</span>
+                                        <span class="language-desc">International hits & classics</span>
+                                    </div>
+                                    <div class="checkmark">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="language-option" data-language="Sinhala">
+                                <input type="checkbox" id="lang-sinhala" name="languages" value="Sinhala">
+                                <label for="lang-sinhala">
+                                    <div class="language-flag">🇱🇰</div>
+                                    <div class="language-info">
+                                        <span class="language-name">Sinhala</span>
+                                        <span class="language-desc">Sri Lankan music</span>
+                                    </div>
+                                    <div class="checkmark">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="language-option" data-language="Tamil">
+                                <input type="checkbox" id="lang-tamil" name="languages" value="Tamil">
+                                <label for="lang-tamil">
+                                    <div class="language-flag">🇮🇳</div>
+                                    <div class="language-info">
+                                        <span class="language-name">Tamil</span>
+                                        <span class="language-desc">Tamil songs & melodies</span>
+                                    </div>
+                                    <div class="checkmark">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="language-option" data-language="Korean">
+                                <input type="checkbox" id="lang-korean" name="languages" value="Korean">
+                                <label for="lang-korean">
+                                    <div class="language-flag">🇰🇷</div>
+                                    <div class="language-info">
+                                        <span class="language-name">Korean</span>
+                                        <span class="language-desc">K-Pop & Korean music</span>
+                                    </div>
+                                    <div class="checkmark">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="language-option" data-language="Other">
+                                <input type="checkbox" id="lang-other" name="languages" value="Other">
+                                <label for="lang-other">
+                                    <div class="language-flag">🌍</div>
+                                    <div class="language-info">
+                                        <span class="language-name">Other</span>
+                                        <span class="language-desc">World music varieties</span>
+                                    </div>
+                                    <div class="checkmark">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="error-message" id="languageError">
+                            Please select at least one language to continue.
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="save-btn">
+                            <i class="fas fa-globe"></i> Save Language Preferences
+                        </button>
+                        <button type="button" class="cancel-btn" id="cancelLanguageChanges">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Account Management Section -->
+            <div class="settings-section danger-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-exclamation-triangle"></i> Account Management</h2>
+                    <p>Manage your account data and privacy settings</p>
+                </div>
+                
+                <div class="danger-actions">
+                    <button class="danger-btn" id="clearHistoryBtn">
+                        <i class="fas fa-history"></i> Clear Activity History
+                    </button>
+                    
+                    <button class="danger-btn" id="deleteAccountBtn">
+                        <i class="fas fa-trash-alt"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <span id="loadingText">Saving changes...</span>
+        </div>
+    </div>
+
+    <!-- Success/Error Messages -->
+    <div class="toast" id="toast">
+        <div class="toast-content">
+            <i class="toast-icon"></i>
+            <span class="toast-message"></span>
+        </div>
+    </div>
+
+    <footer class="main-footer">
+        <p>© 2025 Moodify - Your Emotion-Based Music Recommender</p>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+</body>
+</html>

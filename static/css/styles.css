@@ -40,6 +40,11 @@ h1, h2, h3 {
     margin-bottom: 1rem;
 }
 
+h4 {
+    color: var(--success-color);
+    margin-bottom: 0.75rem;
+}
+
 a {
     text-decoration: none;
     color: var(--primary-color);
@@ -381,6 +386,11 @@ a:hover {
     margin-bottom: 1rem;
 }
 
+.section-option {
+    text-align: center;
+    font-size: 1rem;
+}
+
 .section-description {
     text-align: center;
     font-size: 1.2rem;
@@ -472,11 +482,16 @@ a:hover {
     margin-bottom: 1rem;
 }
 
+.emotion-placeholder p {
+    font-size: 1.1rem;
+}
+
 /* Upload Image Section */
 .upload-content {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 2rem;
+    align-items: start;
 }
 
 .upload-container {
@@ -484,12 +499,13 @@ a:hover {
     border-radius: var(--border-radius);
     box-shadow: var(--box-shadow);
     padding: 1.5rem;
+    text-align: center;
 }
 
 .upload-area {
     width: 100%;
     aspect-ratio: 4/3;
-    border: 2px dashed var(--primary-color);
+    border: 3px dashed var(--primary-color);
     border-radius: var(--border-radius);
     display: flex;
     flex-direction: column;
@@ -509,6 +525,7 @@ a:hover {
     font-size: 3rem;
     color: var(--primary-color);
     margin-bottom: 1rem;
+    display: block;
 }
 
 .upload-button {
@@ -524,6 +541,8 @@ a:hover {
 
 .upload-button:hover {
     background-color: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .preview-container {
@@ -533,6 +552,7 @@ a:hover {
     overflow: hidden;
     position: relative;
     margin-bottom: 1rem;
+    text-align: center;
 }
 
 /* Upload Section Styles */
@@ -578,20 +598,51 @@ a:hover {
     margin-bottom: 1rem;
 }
 
-#detectEmotionBtn {
-    margin-top: 1rem;
-    width: 100%;
+.upload-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
-.emotion-placeholder {
-    text-align: center;
-    padding: 2rem;
-    color: #666;
+.try-again-button {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
 }
 
-.emotion-placeholder i {
-    font-size: 2rem;
-    margin-bottom: 1rem;
+.try-again-button:hover {
+    background: linear-gradient(135deg, #ff5252, #e53935);
+    box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+}
+
+#uploadDetectedEmotion {
+    color: #fff;
+}
+
+#uploadDetectedEmotion h3 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+#uploadEmotionText {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.loading-state {
+    color: #667eea;
+}
+
+.loading-state i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.error-state {
+    color: #ff6b6b;
 }
 
 /* Emotion specific colors */
@@ -869,6 +920,10 @@ a:hover {
     .section-title {
         font-size: 2rem;
     }
+
+    .section-option {
+        font-size: 0.5rem;
+    }
     
     .emotion-grid {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -895,5 +950,197 @@ a:hover {
     
     .tagline {
         font-size: 1.2rem;
+    }
+}
+
+/* Music Therapy Section Styles */
+.music-therapy-section {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    padding: 80px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.music-therapy-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    z-index: 1;
+}
+
+.music-therapy-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.music-therapy-text {
+    color: #2c3e50;
+}
+
+.therapy-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 30px;
+    color: #2c3e50;
+}
+
+.highlight-text {
+    color: #e74c3c;
+    font-style: italic;
+    position: relative;
+}
+
+.highlight-text::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: linear-gradient(90deg, #e74c3c, #f39c12);
+    border-radius: 2px;
+}
+
+.therapy-description {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: #34495e;
+    text-align: justify;
+}
+
+.therapy-description p {
+    margin: 0;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.music-therapy-image {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+.therapy-image {
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+    object-fit: cover;
+}
+
+.therapy-image:hover {
+    transform: scale(1.02) rotate(1deg);
+}
+
+/* Music notes decoration */
+.music-therapy-section::after {
+    content: '♪ ♫ ♪ ♫';
+    position: absolute;
+    top: 20px;
+    right: 50px;
+    font-size: 2rem;
+    color: rgba(231, 76, 60, 0.3);
+    animation: float 6s ease-in-out infinite;
+    z-index: 1;
+}
+
+@keyframes float {
+    0%, 100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+}
+
+.more-emotions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+    justify-items: center;
+}
+.emotion-item {
+    cursor: pointer;
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+}
+.emotion-item:hover {
+    transform: translateY(-5px);
+}
+
+/* Responsive Design */
+@media (max-width: 968px) {
+    .music-therapy-content {
+        grid-template-columns: 1fr;
+        gap: 40px;
+        text-align: center;
+    }
+    
+    .therapy-title {
+        font-size: 2.4rem;
+    }
+    
+    .therapy-description {
+        font-size: 1rem;
+    }
+    
+    .therapy-image {
+        max-width: 350px;
+    }
+}
+
+@media (max-width: 768px) {
+    .music-therapy-section {
+        padding: 60px 0;
+    }
+    
+    .therapy-title {
+        font-size: 2rem;
+    }
+    
+    .therapy-description p {
+        padding: 15px;
+        text-align: left;
+    }
+    
+    .therapy-image {
+        max-width: 300px;
+    }
+}
+
+@media (max-width: 480px) {
+    .therapy-title {
+        font-size: 1.8rem;
+    }
+    
+    .therapy-description {
+        font-size: 0.95rem;
+    }
+    
+    .music-therapy-content {
+        padding: 0 15px;
     }
 }

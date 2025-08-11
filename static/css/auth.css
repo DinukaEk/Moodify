@@ -22,6 +22,7 @@
     background-size: cover;
     background-position: center;
     color: var(--auth-text);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .auth-container {
@@ -62,6 +63,7 @@
     background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 60%);
     opacity: 0.6;
     z-index: 0;
+    pointer-events: none;
 }
 
 .logo-container {
@@ -106,10 +108,20 @@
     text-shadow: 0 2px 5px rgba(0,0,0,0.1);
 }
 
+.auth-right {
+    background: white;
+    color: #333;
+    min-height: 600px;
+    padding: 40px;
+    overflow-y: auto;
+}
+
 .auth-box {
     max-width: 400px;
     width: 100%;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .auth-title {
@@ -139,6 +151,11 @@
 .form-row {
     display: flex;
     gap: 15px;
+    margin-bottom: 0;
+}
+
+.form-row .form-group {
+    margin-bottom: 20px;
 }
 
 .half {
@@ -153,6 +170,7 @@
     font-size: 14px;
     transition: all 0.3s;
     background-color: #f9f9f9;
+    box-sizing: border-box;
 }
 
 .form-group input:focus {
@@ -239,6 +257,10 @@
     text-decoration: underline;
 }
 
+.form-submit {
+    margin-bottom: 20px;
+}
+
 .auth-button {
     width: 100%;
     padding: 14px;
@@ -271,6 +293,8 @@
     align-items: center;
     margin: 25px 0;
     color: #777;
+    text-align: center;
+    position: relative;
 }
 
 .auth-separator:before,
@@ -283,6 +307,7 @@
 .auth-separator span {
     padding: 0 15px;
     font-size: 14px;
+    background: white;
 }
 
 .social-login {
@@ -356,61 +381,14 @@
     background-color: #4CAF50;
 }
 
-/* Responsive styling */
-@media (max-width: 768px) {
-    .auth-container {
-        flex-direction: column;
-        height: auto;
-        width: 95%;
-        max-height: 90vh;
-        overflow-y: auto;
-    }
-    
-    .auth-left, .auth-right {
-        padding: 30px 20px;
-    }
-    
-    .logo-text {
-        font-size: 36px;
-    }
-    
-    .logo {
-        width: 100px;
-    }
-    
-    .auth-left {
-        display: none;
-    }
-    
-    .auth-right {
-        width: 100%;
-    }
-    
-    .form-row {
-        flex-direction: column;
-        gap: 0;
-    }
-}
-
-/* Animation for inputs */
-@keyframes focusIn {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-.form-group input:focus {
-    animation: focusIn 0.2s ease forwards;
-}
-
-/* Additional CSS for signup page - Add these to your auth.css file */
-
 /* Signup specific styles */
 .signup-box {
     max-width: 450px;
+    padding-top: 60px;
 }
 
 .auth-redirect-top {
-    text-align: right;
+    text-align: center;
     margin-bottom: 25px;
     font-size: 14px;
     color: #555;
@@ -426,17 +404,6 @@
 .auth-redirect-top a:hover {
     color: var(--auth-secondary);
     text-decoration: underline;
-}
-
-/* Improve form row spacing for signup */
-.form-row {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 0;
-}
-
-.form-row .form-group {
-    margin-bottom: 20px;
 }
 
 /* Password strength indicator (optional enhancement) */
@@ -470,22 +437,44 @@
     background-color: #4caf50;
 }
 
-/* Media Queries for signup page */
+/* Animation for inputs */
+@keyframes focusIn {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.form-group input:focus {
+    animation: focusIn 0.2s ease forwards;
+}
+
+/* Responsive styling */
 @media (max-width: 768px) {
-    .signup-right {
-        display: none;
+    .auth-container {
+        flex-direction: column;
+        height: auto;
+        width: 95%;
+        max-height: 90vh;
+        overflow-y: auto;
     }
     
-    .signup-left {
+    .auth-left, .auth-right {
+        padding: 30px 20px;
+    }
+    
+    .logo-text {
+        font-size: 36px;
+    }
+    
+    .logo {
+        width: 100px;
+    }
+    
+    .auth-left {
+        min-height: 200px;
+    }
+    
+    .auth-right {
         width: 100%;
-    }
-    
-    .signup-box {
-        max-width: 100%;
-    }
-    
-    .auth-redirect-top {
-        text-align: center;
     }
     
     .form-row {
@@ -495,5 +484,13 @@
     
     .form-row .form-group {
         margin-bottom: 15px;
+    }
+    
+    .signup-box {
+        max-width: 100%;
+    }
+    
+    .auth-redirect-top {
+        text-align: center;
     }
 }
