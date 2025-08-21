@@ -147,8 +147,11 @@ except Exception as e:
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
+        # If no session exists at all, create guest session
+        if 'user_id' not in session and 'is_guest' not in session:
+            session['is_guest'] = True
+            session['name'] = 'Guest User'
+            session['user_id'] = 'guest'
         return f(*args, **kwargs)
     return decorated_function
 
@@ -566,30 +569,26 @@ def get_songs_for_emotion(emotion, user_id=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    if user_id:
-        # Get user's language preferences
+    # For guest users, return all songs for the emotion (no language filtering)
+    if user_id == 'guest' or user_id is None:
+        cursor.execute('SELECT * FROM songs WHERE emotion = %s', (emotion,))
+    else:
+        # Regular user logic (existing code)
         cursor.execute('SELECT language FROM user_language_preferences WHERE user_id = %s', (user_id,))
         user_languages = [row['language'] for row in cursor.fetchall()]
         
         if user_languages:
-            # Get songs that match the emotion and user's preferred languages
             placeholders = ','.join(['%s'] * len(user_languages))
             query = f'SELECT * FROM songs WHERE emotion = %s AND language IN ({placeholders})'
             params = [emotion] + user_languages
             cursor.execute(query, params)
         else:
-            # If no language preferences, get all songs for the emotion
             cursor.execute('SELECT * FROM songs WHERE emotion = %s', (emotion,))
-    else:
-        # If no user_id provided, get all songs for the emotion
-        cursor.execute('SELECT * FROM songs WHERE emotion = %s', (emotion,))
     
     songs = cursor.fetchall()
-    
     cursor.close()
     conn.close()
     
-    # Convert to the format expected by the frontend
     return [{
         'title': song['title'],
         'artist': song['artist'],
@@ -750,6 +749,10 @@ def process_frame(frame_data):
 
 # Save user emotion and recommendation history
 def save_user_history(user_id, emotion, song_id=None):
+    # Don't save history for guest users
+    if user_id == 'guest':
+        return
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     history_id = str(uuid.uuid4())
@@ -891,9 +894,24 @@ def get_dashboard_statistics():
 # Authentication Routes
 @app.route('/')
 def index():
-    if 'user_id' in session:
+    if 'user_id' in session and session['user_id'] != 'guest':
+        # User is logged in
         return redirect(url_for('welcome'))
-    return redirect(url_for('login'))
+    elif 'is_guest' in session:
+        # User is already in guest mode
+        return redirect(url_for('welcome'))
+    else:
+        # No session exists, redirect to guest mode
+        return redirect(url_for('guest_mode'))
+
+# Guest mode route
+@app.route('/guest_mode')
+def guest_mode():
+    session.clear()
+    session['is_guest'] = True
+    session['name'] = 'Guest User'
+    session['user_id'] = 'guest'
+    return redirect(url_for('welcome'))
 
 # Language selection route
 @app.route('/language_selection')
@@ -1208,7 +1226,8 @@ def admin_delete_song(song_id):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'user_id' in session:
+    # If user is already logged in (not guest), redirect to welcome
+    if 'user_id' in session and session['user_id'] != 'guest':
         if session.get('is_admin', False):
             return redirect(url_for('admin_dashboard'))
         return redirect(url_for('welcome'))
@@ -1229,8 +1248,10 @@ def login():
         conn.close()
         
         if user and check_password_hash(user['password'], password):
-            # Set session variables
+            # Clear any existing session (including guest)
             session.clear()
+            
+            # Set session variables for logged in user
             session['user_id'] = user['id']
             session['username'] = user['username']
             session['name'] = user['name']
@@ -1241,7 +1262,6 @@ def login():
             if user['is_admin']:
                 return redirect(url_for('admin_dashboard'))
             
-            # Directly redirect to welcome page (no language check)
             return redirect(url_for('welcome'))
         
         flash('Invalid username or password')
@@ -1250,7 +1270,8 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
-    if 'user_id' in session:
+    # If user is already logged in (not guest), redirect to welcome
+    if 'user_id' in session and session['user_id'] != 'guest':
         return redirect(url_for('welcome'))
         
     if request.method == 'POST':
@@ -1294,8 +1315,10 @@ def signup():
             ''', (user_id, name, username, email, hashed_password))
             conn.commit()
             
-            # Log the user in
+            # Clear any existing session (including guest)
             session.clear()
+            
+            # Log the user in
             session['user_id'] = user_id
             session['username'] = username
             session['name'] = name
@@ -1305,7 +1328,7 @@ def signup():
             cursor.close()
             conn.close()
             
-            # Always redirect to language selection for new users
+            # Redirect to language selection for new users
             return redirect(url_for('language_selection'))
             
         except Exception as e:
@@ -1317,15 +1340,21 @@ def signup():
     
     return render_template('signup.html')
 
+# Logout route
 @app.route('/logout')
 def logout():
     session.clear()
-    return redirect(url_for('login'))
+    # After logout, redirect to guest mode instead of login
+    return redirect(url_for('guest_mode'))
 
 # Profile page route
 @app.route('/profile')
 @login_required
 def profile():
+    if session.get('is_guest'):
+        flash('Please login to access your profile')
+        return redirect(url_for('login'))
+    
     try:
         # Get user data from database
         user_data = get_user_by_id(session['user_id'])
@@ -1368,6 +1397,10 @@ def profile():
 @app.route('/settings')
 @login_required
 def settings():
+    if session.get('is_guest'):
+        flash('Please login to access settings')
+        return redirect(url_for('login'))
+    
     try:
         user_data = get_user_by_id(session['user_id'])
         
@@ -1673,11 +1706,12 @@ def process_emotion():
             if not dominant_emotion:
                 return jsonify({"error": "No faces detected or emotion recognized"}), 400
 
-            # Save to history
-            save_user_history(session['user_id'], dominant_emotion)
+            # Save to history (will be skipped for guests)
+            user_id = session.get('user_id', 'guest')
+            save_user_history(user_id, dominant_emotion)
             
-            # Get recommendations based on user's language preferences
-            recommendations = get_songs_for_emotion(dominant_emotion, session['user_id'])
+            # Get recommendations (guests get all songs, no language filtering)
+            recommendations = get_songs_for_emotion(dominant_emotion, user_id)
             
             return jsonify({
                 "dominant_emotion": dominant_emotion,
@@ -1692,11 +1726,12 @@ def process_emotion():
         print(f"Error in process_emotion: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
-# Add this new route for getting songs by emotion with language filtering
+# Route for getting songs by emotion with language filtering
 @app.route('/get_songs/<emotion>')
 @login_required
 def get_songs(emotion):
-    songs = get_songs_for_emotion(emotion, session['user_id'])
+    user_id = session.get('user_id', 'guest')
+    songs = get_songs_for_emotion(emotion, user_id)
     return jsonify(songs)
 
 @app.route('/save_song_selection', methods=['POST'])
@@ -1706,11 +1741,13 @@ def save_song_selection():
     emotion = data.get('emotion')
     song_id = data.get('song_id')
     
-    if 'user_id' in session:
-        save_user_history(session['user_id'], emotion, song_id)
+    user_id = session.get('user_id')
+    if user_id and user_id != 'guest':
+        save_user_history(user_id, emotion, song_id)
         return jsonify({"success": True})
     
-    return jsonify({"success": False, "error": "User not logged in"})
+    # For guests, just return success but don't save
+    return jsonify({"success": True, "guest_mode": True})
 
 @app.route('/user_history')
 @login_required

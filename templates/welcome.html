@@ -33,23 +33,67 @@
             <!-- User profile in the navbar -->
             <div class="user-profile-nav">
                 <div class="user-info" id="userInfo">
-                    <span class="user-name">{{ session.get('name', 'User') }}</span>
+                    <span class="user-name">
+                        {{ session.get('name', 'User') }}
+                        {% if session.get('is_guest') %}
+                            <span class="guest-badge">(Guest)</span>
+                        {% endif %}
+                    </span>
                     <div class="user-avatar">
-                        <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User Avatar">
+                        {% if session.get('is_guest') %}
+                            <i class="fas fa-user-secret guest-avatar"></i>
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/user-avatar.png') }}" alt="User Avatar">
+                        {% endif %}
                     </div>
                     <!-- Dropdown menu -->
                     <div class="user-dropdown" id="userDropdown">
                         <ul>
-                            <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
-                            <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
-                            <li class="dropdown-divider"></li>
-                            <li><a href="{{ url_for('logout') }}" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                            {% if session.get('is_guest') %}
+                                <li class="guest-header">
+                                    <i class="fas fa-info-circle"></i>
+                                    <span>Guest Mode Active</span>
+                                </li>
+                                <li class="dropdown-divider"></li>
+                                <li><a href="{{ url_for('signup') }}"><i class="fas fa-user-plus"></i> Create Account</a></li>
+                                <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
+                                <li class="dropdown-divider"></li>
+                            {% else %}
+                                <li><a href="{{ url_for('profile') }}"><i class="fas fa-user"></i> Profile</a></li>
+                                <li><a href="{{ url_for('settings') }}"><i class="fas fa-cog"></i> Settings</a></li>
+                                {% if session.get('is_admin', False) %}
+                                    <li><a href="{{ url_for('admin_dashboard') }}"><i class="fas fa-cog"></i> Admin Panel</a></li>
+                                {% endif %}
+                                <li class="dropdown-divider"></li>
+                            {% endif %}
+                            <li><a href="{{ url_for('logout') }}" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i> 
+                                {% if session.get('is_guest') %}Exit Guest Mode{% else %}Logout{% endif %}
+                            </a></li>
                         </ul>
                     </div>
                 </div>
             </div>
         </div>
     </header>
+
+    {% if session.get('is_guest') %}
+    <div class="guest-notification enhanced">
+        <div class="guest-notification-content">
+            <div class="guest-info">
+                <i class="fas fa-user-secret"></i>
+                <div class="guest-text">
+                    <h4>Welcome to Moodify!</h4>
+                    <p>You're exploring as a guest. Your activity won't be saved, but you can enjoy all features.</p>
+                </div>
+            </div>
+            <div class="guest-actions">
+                <a href="{{ url_for('login') }}" class="login-btn">Login</a>
+                <a href="{{ url_for('signup') }}" class="signup-btn">Sign Up</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Hero Section -->
     <section id="hero-section" class="hero-section">

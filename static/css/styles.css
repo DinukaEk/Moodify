@@ -811,6 +811,121 @@ a:hover {
     font-weight: bold;
 }
 
+.guest-notification.enhanced {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 0;
+    position: sticky;
+    top: 60px;
+    z-index: 999;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.guest-notification-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.guest-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.guest-info i {
+    font-size: 2em;
+    color: rgba(255,255,255,0.9);
+}
+
+.guest-text h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+.guest-text p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 0.95em;
+}
+
+.guest-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.login-btn, .signup-btn {
+    padding: 10px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.login-btn {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+}
+
+.login-btn:hover {
+    background: rgba(255,255,255,0.25);
+    color: white;
+}
+
+.signup-btn {
+    background: white;
+    color: #667eea;
+    border: 1px solid white;
+}
+
+.signup-btn:hover {
+    background: #f8f9ff;
+    color: #667eea;
+    transform: translateY(-1px);
+}
+
+.guest-header {
+    padding: 8px 15px;
+    background: #f8f9fa;
+    color: #6c63ff;
+    font-weight: 500;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.guest-header i {
+    margin-right: 8px;
+}
+
+@media (max-width: 768px) {
+    .guest-notification-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .guest-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .guest-actions {
+        width: 100%;
+        max-width: 300px;
+    }
+    
+    .login-btn, .signup-btn {
+        flex: 1;
+    }
+}
+
 /* Animations */
 @keyframes pulse {
     0% {
