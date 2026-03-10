@@ -2,6 +2,11 @@
 
 Automatically generate personalized music playlists based on your current mood. Connects with Spotify, analyzes audio features, and creates mood-specific playlists using your listening history.
 
+🔗 **Live Demo (GitHub Pages)**  
+[https://dinukaek.github.io/virtual-art-gallery/](https://moodify-1vvn.onrender.com)
+
+---
+
 ## 🚀 Features
 - Authenticates with Spotify using OAuth2
 - Retrieves user’s listening history and key audio features (e.g. energy, danceability, valence)
