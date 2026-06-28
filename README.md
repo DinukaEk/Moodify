@@ -19,6 +19,7 @@ Automatically generate personalized music playlists based on your current mood. 
 - **Backend**: Python, Flask, SQLAlchemy
 - **Database**: PostgreSQL
 - **ML/Analysis**: NumPy, SciPy (for normalization & algorithms)
+- **AI/Analysis**: Tenserflow
 - **APIs**: Spotify Web API
 
 ## ⚙️ Prerequisites
